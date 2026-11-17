@@ -1,0 +1,3367 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IN VEIN Pavia - Serena, 21 anni (Psicologia UniPv)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <!-- React & Babel Standalone (con Fallback CDN) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script>window.React || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"><\/script>')</script>
+
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script>window.ReactDOM || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"><\/script>')</script>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>window.Babel || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"><\/script>')</script>
+
+  <!-- Script diagnostico errori -->
+  <script>
+    window.addEventListener('error', function(e) {
+      console.error('Captured runtime error:', e);
+      var errBox = document.getElementById('error-overlay');
+      if (!errBox) {
+        errBox = document.createElement('div');
+        errBox.id = 'error-overlay';
+        errBox.style = 'position:fixed;bottom:20px;left:20px;right:20px;max-width:480px;margin:auto;background:#fee2e2;border:2px solid #ef4444;color:#991b1b;padding:16px;border-radius:18px;font-family:system-ui,sans-serif;font-size:12px;z-index:999999;box-shadow:0 12px 30px rgba(0,0,0,0.5);';
+        errBox.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:4px;">⚠️ Avviso Caricamento Prototipo</div><div>' + (e.message || (e.error ? e.error.message : 'Errore sconosciuto')) + '</div><div style="margin-top:8px;font-size:11px;color:#7f1d1d;">Verifica che la connessione internet sia attiva per scaricare i componenti.</div>';
+        document.body.appendChild(errBox);
+      }
+    });
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #cbd5e1;
+    }
+  </style>
+</head>
+<body class="bg-stone-900 min-h-screen text-stone-800 antialiased selection:bg-rose-200">
+  <div id="root">
+    <!-- Splash Screen elegante durante il caricamento iniziale -->
+    <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #1c1917; color: white; font-family: system-ui, sans-serif;">
+      <div style="width: 56px; height: 56px; border-radius: 20px; background: linear-gradient(135deg, #e11d48, #f43f5e); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(225, 29, 72, 0.4); margin-bottom: 16px;">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M12 21.5c-3.5 0-6.5-2.8-6.5-6.3 0-3.2 5.5-11.2 6.5-12.7 1 1.5 6.5 9.5 6.5 12.7 0 3.5-3 6.3-6.5 6.3z"/></svg>
+      </div>
+      <div style="font-weight: 900; font-size: 18px; letter-spacing: -0.5px;">IN VEIN <span style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 6px; font-size: 11px;">PAVIA</span></div>
+      <div style="color: #a8a29e; font-size: 12px; margin-top: 6px;">Caricamento prototipo in corso...</div>
+    </div>
+  </div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ============================================================================
+    // ICONE SVG NATIVE LUCIDE-COMPATIBILI
+    // ============================================================================
+    const SvgIcon = ({ className = 'w-5 h-5', children, ...props }) => (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={`inline-block shrink-0 ${className}`}
+        {...props}
+      >
+        {children}
+      </svg>
+    );
+
+    const Home = (p) => <SvgIcon {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></SvgIcon>;
+    const Users = (p) => <SvgIcon {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></SvgIcon>;
+    const Trophy = (p) => <SvgIcon {...p}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></SvgIcon>;
+    const Droplet = (p) => <SvgIcon {...p}><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></SvgIcon>;
+    const Droplets = (p) => <SvgIcon {...p}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></SvgIcon>;
+    const CheckCircle2 = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></SvgIcon>;
+    const ClipboardList = (p) => <SvgIcon {...p}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></SvgIcon>;
+    const HeartPulse = (p) => <SvgIcon {...p}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></SvgIcon>;
+    const ShieldCheck = (p) => <SvgIcon {...p}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></SvgIcon>;
+    const ChevronRight = (p) => <SvgIcon {...p}><path d="m9 18 6-6-6-6"/></SvgIcon>;
+    const Flame = (p) => <SvgIcon {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></SvgIcon>;
+    const Sparkles = (p) => <SvgIcon {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></SvgIcon>;
+    const Award = (p) => <SvgIcon {...p}><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></SvgIcon>;
+    const BookOpen = (p) => <SvgIcon {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></SvgIcon>;
+    const Calendar = (p) => <SvgIcon {...p}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></SvgIcon>;
+    const Clock = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></SvgIcon>;
+    const QrCode = (p) => <SvgIcon {...p}><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></SvgIcon>;
+    const GraduationCap = (p) => <SvgIcon {...p}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></SvgIcon>;
+    const Check = (p) => <SvgIcon {...p}><polyline points="20 6 9 17 4 12"/></SvgIcon>;
+    const X = (p) => <SvgIcon {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></SvgIcon>;
+    const Zap = (p) => <SvgIcon {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></SvgIcon>;
+// ============================================================================
+// AVATAR ILLUSTRATO REATTIVO - MEGA SHOP UNIVERSITARIO (SVG DEDICATI)
+// ============================================================================
+function CustomAvatar({ config, size = 'md', onClick, felice = false }) {
+  const sizes = {
+    xs: 'w-7 h-7',
+    sm: 'w-10 h-10',
+    md: 'w-14 h-14',
+    lg: 'w-20 h-20',
+    xl: 'w-28 h-28'
+  };
+
+  const carnagioni = {
+    chiara: '#FDE68A',
+    media: '#F59E0B',
+    calda: '#D97706',
+    rosata: '#FECDD3'
+  };
+
+  const auraStyle = (config?.accessorio === 'aura_fuoco' || felice)
+    ? 'ring-4 ring-amber-400/80 shadow-lg shadow-amber-300/60 scale-105'
+    : onClick ? 'hover:scale-105' : '';
+
+  const abito = config?.abito || config?.felpa || 'felpa_rossa';
+  const accessorio = config?.accessorio || 'cerotto';
+
+  return (
+    <div
+      onClick={onClick || undefined}
+      className={`${sizes[size] || sizes.md} bg-rose-50 border-2 border-rose-200 rounded-full flex items-center justify-center relative overflow-hidden shadow-sm transition-all shrink-0 ${onClick ? 'cursor-pointer' : 'cursor-default'} ${auraStyle}`}
+      title="Avatar Donatore UniPv"
+    >
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        {/* AURA SUPREMA FUOCO / ORO (SOTTOSTANTE) */}
+        {accessorio === 'aura_fuoco' && (
+          <g>
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#F59E0B" strokeWidth="3" strokeDasharray="6,4" />
+            <polygon points="50,2 53,10 61,10 55,15 57,23 50,18 43,23 45,15 39,10 47,10" fill="#FBBF24" />
+            <polygon points="90,40 92,45 98,45 93,48 95,53 90,50 85,53 87,48 82,45 88,45" fill="#FBBF24" />
+            <polygon points="10,40 12,45 18,45 13,48 15,53 10,50 5,53 7,48 2,45 8,45" fill="#FBBF24" />
+          </g>
+        )}
+
+        {/* MANTELLO VAMPIRO (DIETRO AL CORPO) */}
+        {abito === 'mantello_vampiro' && (
+          <path d="M12 55 L50 25 L88 55 L96 100 L4 100 Z" fill="#0F172A" />
+        )}
+
+        {/* ================= CORPO / VESTI ================= */}
+
+        {/* 1. Felpa Matricola Rossa */}
+        {abito === 'felpa_rossa' && (
+          <g>
+            <path d="M20 100 C20 72 80 72 80 100 Z" fill="#C81E3D" />
+            <path d="M40 76 L50 88 L60 76" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+          </g>
+        )}
+
+        {/* 2. Felpa Collegio Blu UniPv */}
+        {abito === 'felpa_blu' && (
+          <g>
+            <path d="M20 100 C20 72 80 72 80 100 Z" fill="#1E3A8A" />
+            <path d="M40 76 L50 88 L60 76" fill="none" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="50" cy="85" r="4" fill="#F59E0B" />
+          </g>
+        )}
+
+        {/* 3. Camice Bianco San Matteo con Stetoscopio */}
+        {abito === 'camice' && (
+          <g>
+            <path d="M20 100 C20 72 80 72 80 100 Z" fill="#F8FAFC" />
+            <line x1="50" y1="72" x2="50" y2="100" stroke="#CBD5E1" strokeWidth="2" />
+            <circle cx="50" cy="80" r="1.5" fill="#64748B" />
+            <circle cx="50" cy="88" r="1.5" fill="#64748B" />
+            {/* Stetoscopio */}
+            <path d="M36 72 C36 88 64 88 64 72" fill="none" stroke="#0284C7" strokeWidth="2.5" />
+            <circle cx="64" cy="88" r="3.5" fill="#0284C7" />
+          </g>
+        )}
+
+        {/* 4. Giacca Atletica CUS Pavia */}
+        {abito === 'giacca_cus' && (
+          <g>
+            <path d="M20 100 C20 72 80 72 80 100 Z" fill="#059669" />
+            <path d="M30 72 L30 100" stroke="#F59E0B" strokeWidth="3" />
+            <path d="M70 72 L70 100" stroke="#F59E0B" strokeWidth="3" />
+            <path d="M46 72 L50 100 L54 72" fill="#FFFFFF" />
+          </g>
+        )}
+
+        {/* 5. Toga Accademica Storica */}
+        {abito === 'toga' && (
+          <g>
+            <path d="M20 100 C20 70 80 70 80 100 Z" fill="#18181B" />
+            <path d="M38 72 L50 88 L62 72 Z" fill="#F8FAFC" stroke="#D97706" strokeWidth="1.5" />
+            <path d="M20 90 Q50 96 80 90" stroke="#D97706" strokeWidth="2.5" fill="none" />
+          </g>
+        )}
+
+        {/* 6. Mantello Conte Dracula Donatore */}
+        {abito === 'mantello_vampiro' && (
+          <g>
+            <path d="M22 100 C22 72 78 72 78 100 Z" fill="#881337" />
+            <path d="M35 72 L50 90 L65 72" fill="#991B1B" />
+            <circle cx="50" cy="78" r="3.5" fill="#F59E0B" />
+          </g>
+        )}
+
+        {/* 7. Manto d'Ermellino del Magnifico Rettore */}
+        {abito === 'ermellino' && (
+          <g>
+            <path d="M20 100 C20 70 80 70 80 100 Z" fill="#6B21A8" />
+            {/* Pelliccia bianca con macchie nere */}
+            <path d="M30 70 C30 84 70 84 70 70 Z" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="1" />
+            <circle cx="40" cy="76" r="1.5" fill="#18181B" />
+            <circle cx="60" cy="76" r="1.5" fill="#18181B" />
+            <circle cx="50" cy="80" r="1.5" fill="#18181B" />
+            {/* Collare d'Oro del Rettorato */}
+            <path d="M36 82 Q50 92 64 82" stroke="#F59E0B" strokeWidth="3" fill="none" strokeDasharray="3,2" />
+          </g>
+        )}
+
+        {/* 8. Armatura Elettrica Alessandro Volta */}
+        {abito === 'armatura_volta' && (
+          <g>
+            <path d="M20 100 C20 68 80 68 80 100 Z" fill="#64748B" />
+            <path d="M32 74 L50 86 L68 74 L50 100 Z" fill="#94A3B8" stroke="#F59E0B" strokeWidth="1.5" />
+            {/* Fulmine energetico al centro */}
+            <polygon points="50,76 46,84 52,84 48,94 56,82 50,82" fill="#38BDF8" />
+          </g>
+        )}
+
+        {/* TESTA E VISO */}
+        <circle cx="50" cy="46" r="22" fill={carnagioni[config?.carnagione] || '#FECDD3'} />
+
+        {/* CAPELLI BASE */}
+        {config?.capelli === 'lunghi' && (
+          <path
+            d="M26 48 C24 22 76 22 74 48 C76 62 72 72 68 72 C68 50 65 34 50 34 C35 34 32 50 32 72 C28 72 24 62 26 48 Z"
+            fill="#27272A"
+          />
+        )}
+        {config?.capelli === 'corti' && (
+          <path d="M28 42 C28 22 72 22 72 42 C66 32 34 32 28 42 Z" fill="#451A03" />
+        )}
+        {config?.capelli === 'ricci' && (
+          <g fill="#78350F">
+            <circle cx="34" cy="30" r="9" />
+            <circle cx="50" cy="25" r="10" />
+            <circle cx="66" cy="30" r="9" />
+            <circle cx="28" cy="40" r="7" />
+            <circle cx="72" cy="40" r="7" />
+          </g>
+        )}
+
+        {/* OCCHI */}
+        <circle cx="42" cy="46" r="2.8" fill="#18181B" />
+        <circle cx="58" cy="46" r="2.8" fill="#18181B" />
+        <circle cx="43" cy="45" r="0.9" fill="#FFFFFF" />
+        <circle cx="59" cy="45" r="0.9" fill="#FFFFFF" />
+
+        {/* SORRISO */}
+        {felice ? (
+          <path d="M42 56 Q50 65 58 56" fill="none" stroke="#18181B" strokeWidth="2.5" strokeLinecap="round" />
+        ) : (
+          <path d="M44 57 Q50 61 56 57" fill="none" stroke="#18181B" strokeWidth="2.2" strokeLinecap="round" />
+        )}
+
+        {/* GUANCE */}
+        <circle cx="36" cy="52" r="3.5" fill="#FDA4AF" opacity="0.7" />
+        <circle cx="64" cy="52" r="3.5" fill="#FDA4AF" opacity="0.7" />
+
+        {/* ================= COPRICAPI & ACCESSORI ================= */}
+
+        {/* Cerotto Cuore */}
+        {accessorio === 'cerotto' && (
+          <g transform="translate(60, 52) rotate(-15)">
+            <rect x="-8" y="-3" width="16" height="6" rx="2" fill="#FB7185" />
+            <circle cx="0" cy="0" r="1.5" fill="#FFFFFF" />
+          </g>
+        )}
+
+        {/* Occhiali Sessione Notturna */}
+        {accessorio === 'occhiali' && (
+          <g stroke="#18181B" strokeWidth="2" fill="none">
+            <rect x="36" y="42" width="12" height="9" rx="2" />
+            <rect x="52" y="42" width="12" height="9" rx="2" />
+            <line x1="48" y1="46" x2="52" y2="46" />
+          </g>
+        )}
+
+        {/* Tocco di Laurea con Nappa */}
+        {accessorio === 'tocco' && (
+          <g fill="#18181B">
+            <polygon points="50,14 76,23 50,32 24,23" />
+            <rect x="38" y="27" width="24" height="6" rx="1" />
+            <path d="M70 25 L74 38" stroke="#F59E0B" strokeWidth="1.8" />
+            <circle cx="74" cy="39" r="1.5" fill="#F59E0B" />
+          </g>
+        )}
+
+        {/* Corona d'Alloro 110 e Lode */}
+        {accessorio === 'alloro' && (
+          <g>
+            <path d="M30 38 Q50 18 70 38" stroke="#15803D" strokeWidth="4" fill="none" strokeLinecap="round" />
+            <circle cx="34" cy="32" r="2.5" fill="#DC2626" />
+            <circle cx="44" cy="24" r="2.5" fill="#DC2626" />
+            <circle cx="56" cy="24" r="2.5" fill="#DC2626" />
+            <circle cx="66" cy="32" r="2.5" fill="#DC2626" />
+            <path d="M50 20 L50 12 L54 18" stroke="#DC2626" strokeWidth="2" fill="none" />
+          </g>
+        )}
+
+        {/* Feluca Goliardica Pavese */}
+        {accessorio === 'feluca' && (
+          <g>
+            <path d="M22 36 L50 8 L78 36 Z" fill="#1E3A8A" stroke="#172554" strokeWidth="1.5" />
+            <path d="M22 36 Q50 40 78 36" fill="#172554" />
+            {/* Piuma goliardica alta */}
+            <path d="M50 10 Q68 -2 74 12" stroke="#DC2626" strokeWidth="3" fill="none" strokeLinecap="round" />
+            <circle cx="50" cy="22" r="3" fill="#F59E0B" />
+          </g>
+        )}
+
+        {/* Corona Ferrea & Scettro dei Re di Pavia */}
+        {accessorio === 'corona_alboino' && (
+          <g>
+            <path d="M26 34 L32 18 L42 26 L50 14 L58 26 L68 18 L74 34 Z" fill="#F59E0B" stroke="#B45309" strokeWidth="1.5" />
+            <rect x="26" y="32" width="48" height="5" fill="#D97706" rx="1" />
+            <circle cx="50" cy="25" r="2" fill="#E11D48" />
+            <circle cx="37" cy="28" r="1.5" fill="#0284C7" />
+            <circle cx="63" cy="28" r="1.5" fill="#10B981" />
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+// ============================================================================
+// BARRA DEI GIORNI CON LA GOCCIA (UNICA BARRA INTERATTIVA & TRASCINABILE)
+// ============================================================================
+function BarraGocciaProgressiva({
+  giorniTrascorsi,
+  setGiorniTrascorsi,
+  tipoDonatrice,
+  setTipoDonatrice
+}) {
+  const durate = { donna: 120, uomo: 90, plasma: 30 };
+  const giorniTotali = durate[tipoDonatrice] || 120;
+  const percentuale = Math.min(100, Math.max(0, Math.round((giorniTrascorsi / giorniTotali) * 100)));
+  const giorniRimanenti = Math.max(0, giorniTotali - giorniTrascorsi);
+
+  const selezionaTipo = (tipo) => {
+    setTipoDonatrice(tipo);
+    const maxG = durate[tipo];
+    if (giorniTrascorsi > maxG) {
+      setGiorniTrascorsi(maxG);
+    }
+  };
+
+  return (
+    <div className="bg-white p-5 rounded-3xl border border-stone-200/80 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-200/70 px-2 py-0.5 rounded-md inline-block">
+            Recupero Fisiologico
+          </span>
+          <h3 className="text-sm font-black text-stone-900 mt-1">
+            La Barra dei Giorni con la Goccia
+          </h3>
+        </div>
+        <div className="text-right">
+          <span className="text-xs font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-200">
+            {giorniRimanenti === 0 ? 'Idonea Oggi! 🎉' : `-${giorniRimanenti} giorni`}
+          </span>
+        </div>
+      </div>
+
+      {/* SELETTORE RAPIDO SANGUE DONNA / UOMO / PLASMA */}
+      <div className="grid grid-cols-3 gap-1.5 bg-stone-100 p-1 rounded-2xl text-[11px] font-bold">
+        <button
+          onClick={() => selezionaTipo('donna')}
+          className={`py-2 px-1 rounded-xl transition text-center ${
+            tipoDonatrice === 'donna' ? 'bg-white text-rose-700 shadow-sm font-black' : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          Donna (120g)
+        </button>
+        <button
+          onClick={() => selezionaTipo('uomo')}
+          className={`py-2 px-1 rounded-xl transition text-center ${
+            tipoDonatrice === 'uomo' ? 'bg-white text-blue-700 shadow-sm font-black' : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          Uomo (90g)
+        </button>
+        <button
+          onClick={() => selezionaTipo('plasma')}
+          className={`py-2 px-1 rounded-xl transition text-center ${
+            tipoDonatrice === 'plasma' ? 'bg-white text-amber-700 shadow-sm font-black' : 'text-stone-600 hover:text-stone-900'
+          }`}
+          title="Consigliata se hai ferro o ferritina variabile!"
+        >
+          Plasma (30g)
+        </button>
+      </div>
+
+      {tipoDonatrice === 'plasma' && (
+        <p className="text-[11px] bg-amber-50 border border-amber-200 text-amber-900 p-2.5 rounded-xl font-medium leading-relaxed">
+          💡 <strong>Plasmaferesi (Consigliata per ferro basso):</strong> trattiene solo il plasma reintegrando i globuli rossi. Ideale per le studentesse con ferritina variabile!
+        </p>
+      )}
+
+      {/* UNICA BARRA INTERATTIVA: L'INPUT RANGE È SOVRAPPOSTO DIRETTAMENTE SULLA BARRA */}
+      <div className="pt-5 pb-1 px-1">
+        <div className="flex justify-between items-center text-[10px] text-stone-500 font-bold mb-2">
+          <span className="flex items-center gap-1 text-stone-700">
+            <Sparkles className="w-3.5 h-3.5 text-rose-600" />
+            ↔ Trascina direttamente la goccia per simulare i giorni
+          </span>
+          <span className="font-mono font-black text-rose-700">
+            {giorniTrascorsi} / {giorniTotali} gg ({percentuale}%)
+          </span>
+        </div>
+
+        <div className="relative w-full h-8 flex items-center">
+          {/* Traccia di sfondo */}
+          <div className="w-full h-3.5 bg-stone-100 rounded-full border border-stone-200 relative overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-rose-400 via-rose-500 to-rose-600 rounded-full transition-all duration-150"
+              style={{ width: `${percentuale}%` }}
+            />
+          </div>
+
+          {/* Goccia Animata Visibile */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-150 z-20 flex flex-col items-center"
+            style={{ left: `${Math.max(4, Math.min(96, percentuale))}%` }}
+          >
+            <div className="absolute -top-7 bg-stone-900 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md whitespace-nowrap flex items-center gap-1 border border-stone-700">
+              <span>Giorno {giorniTrascorsi}</span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-rose-600 border-2 border-white shadow-lg flex items-center justify-center text-white ring-2 ring-rose-300">
+              <Droplet className="w-4 h-4 fill-white text-white animate-pulse" />
+            </div>
+          </div>
+
+          {/* INPUT RANGE INVISIBILE E SOVRAPPOSTO: L'utente trascina fisicamente la goccia */}
+          <input
+            type="range"
+            min="1"
+            max={giorniTotali}
+            value={giorniTrascorsi}
+            onChange={(e) => setGiorniTrascorsi(Number(e.target.value))}
+            className="opacity-0 absolute inset-0 w-full h-12 cursor-grab active:cursor-grabbing z-30 m-0"
+            title="Trascina la goccia lungo la barra"
+          />
+        </div>
+
+        {/* 4 TRAGUARDI IN GRIGLIA A 4 COLONNE: ZERO TESTI A CAPO */}
+        <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-bold text-stone-500 mt-4 pt-1 border-t border-stone-100">
+          <div className="bg-stone-50 p-1.5 rounded-xl border border-stone-200/60">
+            <span className="block text-stone-800 font-black">Giorno 1</span>
+            <span className="text-[9px] text-stone-400">Inizio</span>
+          </div>
+          <div className="bg-stone-50 p-1.5 rounded-xl border border-stone-200/60">
+            <span className="block text-stone-800 font-black">Giorno {Math.round(giorniTotali * 0.25)}</span>
+            <span className="text-[9px] text-blue-600 font-bold">💧 Plasma</span>
+          </div>
+          <div className="bg-stone-50 p-1.5 rounded-xl border border-stone-200/60">
+            <span className="block text-stone-800 font-black">Giorno {Math.round(giorniTotali * 0.5)}</span>
+            <span className="text-[9px] text-amber-600 font-bold">⚡ Ferro</span>
+          </div>
+          <div className="bg-stone-50 p-1.5 rounded-xl border border-stone-200/60">
+            <span className="block text-rose-700 font-black">Giorno {giorniTotali}</span>
+            <span className="text-[9px] text-rose-600 font-bold">🎯 Idonea</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Feedback Biologico */}
+      <div className="bg-stone-50 border border-stone-200/80 p-3.5 rounded-2xl flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+          <HeartPulse className="w-5 h-5 text-rose-600" />
+        </div>
+        <p className="text-[11px] text-stone-700 leading-snug">
+          {percentuale < 30 && (
+            <span>💧 <strong>Volume plasmatico ripristinato:</strong> componente liquida rigenerata in 24-48h con l'acqua. Ora il midollo sintetizza nuovi globuli rossi.</span>
+          )}
+          {percentuale >= 30 && percentuale < 100 && (
+            <span>⚡ <strong>Ricostituzione cellulare ({percentuale}%):</strong> scorte di ferritina e globuli rossi in piena ripresa. Serena si sente in forze e concentrata per lo studio!</span>
+          )}
+          {percentuale >= 100 && (
+            <span>🎉 <strong>Rigenerazione completata (100%):</strong> il corpo di Serena è pronto. Puoi prenotare il prossimo slot con accesso prioritario in Cortile Centrale!</span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MODALE VERIFICA ATENEO (ESSE3 SSO & SICUREZZA DIPARTIMENTI)
+// ============================================================================
+function ModaleVerificaAteneo({
+  profilo,
+  setProfilo,
+  onClose,
+  mostraNotifica
+}) {
+  const [email, setEmail] = useState(profilo.email || 'serena.rossi01@universitadipavia.it');
+  const [facoltaSelezionata, setFacoltaSelezionata] = useState(profilo.facolta || 'Psicologia');
+  const [annoSelezionato, setAnnoSelezionato] = useState(profilo.annoCorso || '3° Anno');
+  const [ruoloSelezionato, setRuoloSelezionato] = useState(profilo.ruoloUtente || 'neo');
+
+  const dipartimentiPavia = [
+    'Psicologia',
+    'Medicina',
+    'Ingegneria',
+    'Economia',
+    'Farmacia & Bio',
+    'Giurisprudenza',
+    'Lettere'
+  ];
+
+  const anniCorso = ['1° Anno', '2° Anno', '3° Anno', '4° Anno', '5° Anno / Magistrale'];
+
+  const salvaVerifica = () => {
+    setProfilo((prev) => ({
+      ...prev,
+      email,
+      facolta: facoltaSelezionata,
+      annoCorso: annoSelezionato,
+      ruoloUtente: ruoloSelezionato,
+      verificatoSSO: true
+    }));
+    mostraNotifica('Profilo Ateneo Verificato! 🎓', `Certificata iscrizione a ${facoltaSelezionata} (${annoSelezionato})`, 0);
+    onClose();
+  };
+
+  return (
+    <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-stone-900">Verifica SSO UniPv</h3>
+              <p className="text-[10px] text-stone-500">Integrazione Esse3 Ateneo di Pavia</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* 1. EMAIL ISTITUZIONALE */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black uppercase tracking-wider text-stone-700 block">
+            Email Istituzionale (@universitadipavia.it):
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full text-xs font-semibold p-3 border-2 border-stone-200 rounded-xl focus:border-rose-600 outline-none bg-stone-50/50"
+          />
+        </div>
+
+        {/* 2. DIPARTIMENTO / CORSO DI LAUREA */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black uppercase tracking-wider text-stone-700 block">
+            Dipartimento di Appartenenza (Esse3):
+          </label>
+          <select
+            value={facoltaSelezionata}
+            onChange={(e) => setFacoltaSelezionata(e.target.value)}
+            className="w-full text-xs font-bold p-3 border-2 border-stone-200 rounded-xl focus:border-rose-600 outline-none bg-stone-50/50"
+          >
+            {dipartimentiPavia.map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* 3. ANNO DI CORSO */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black uppercase tracking-wider text-stone-700 block">
+            Anno di Corso:
+          </label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {anniCorso.map((a) => (
+              <button
+                type="button"
+                key={a}
+                onClick={() => setAnnoSelezionato(a)}
+                className={`py-2 px-1 text-[10px] font-bold rounded-xl border transition text-center truncate ${
+                  annoSelezionato === a
+                    ? 'bg-rose-600 text-white border-rose-600 font-black'
+                    : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. RUOLO NELL'APP */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black uppercase tracking-wider text-stone-700 block">
+            Ruolo Attuale nella Community:
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setRuoloSelezionato('neo')}
+              className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition flex flex-col justify-between ${
+                ruoloSelezionato === 'neo'
+                  ? 'border-rose-600 bg-rose-50 text-rose-900 ring-2 ring-rose-200'
+                  : 'border-stone-200 bg-stone-50 text-stone-700'
+              }`}
+            >
+              <span>🌱 Neo-Donatore</span>
+              <span className="text-[10px] text-stone-500 font-normal mt-1">Cerco un Tutor per la 1ª volta</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRuoloSelezionato('tutor')}
+              className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition flex flex-col justify-between ${
+                ruoloSelezionato === 'tutor'
+                  ? 'border-rose-600 bg-rose-50 text-rose-900 ring-2 ring-rose-200'
+                  : 'border-stone-200 bg-stone-50 text-stone-700'
+              }`}
+            >
+              <span>🏅 Donatore Esperto</span>
+              <span className="text-[10px] text-stone-500 font-normal mt-1">Disponibile ad accompagnare</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 5. SPIEGAZIONE SICUREZZA & ANTIFRODE */}
+        <div className="bg-amber-50/90 border border-amber-200/80 p-3.5 rounded-2xl text-[11px] text-amber-950 space-y-1 leading-relaxed">
+          <p className="font-extrabold flex items-center gap-1.5 text-amber-950">
+            <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+            Perché la verifica è fondamentale:
+          </p>
+          <p>
+            L'autenticazione tramite dominio <strong>@universitadipavia.it</strong> garantisce che ogni studente contribuisca solo al proprio Dipartimento reale e tutela la massima sicurezza degli incontri con i Tutor nei Safe Point.
+          </p>
+        </div>
+
+        <button
+          onClick={salvaVerifica}
+          className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-black rounded-2xl text-xs shadow-md transition"
+        >
+          Conferma Identità e Salva
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SCHERMATA HOME: RISTRUTTURATA CON CARD PROFILO SSO & AZIONI RAPIDE
+// ============================================================================
+function SchermataHome({
+  setSchedaAttiva,
+  idoneitaVerificata,
+  compagnoPrenotato,
+  donazioneConvalidata,
+  setModaleConvalidaAperta,
+  profilo,
+  avatar,
+  setModaleAvatarAperta,
+  setModaleVerificaAperta,
+  giorniTrascorsi,
+  setGiorniTrascorsi,
+  tipoDonatrice,
+  setTipoDonatrice
+}) {
+  const gruppoSanguigno = donazioneConvalidata
+    ? 'Gruppo: 0+'
+    : 'Gruppo: ?';
+
+  return (
+    <div className="space-y-4">
+      {/* 1. CARD PROFILO SERENA (ULTRA-PULITA, BADGE SSO, ZERO TESTI A CAPO) */}
+      <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1.5 flex-1">
+            {/* Riga Badge: Facoltà, Gruppo e Verifica SSO */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-200/80 px-2.5 py-0.5 rounded-full inline-block">
+                {profilo.facolta.toLowerCase()} · {profilo.annoCorso.toLowerCase()}
+              </span>
+              <span className="text-[10px] font-black bg-stone-100 text-stone-700 px-2 py-0.5 rounded-full">
+                {gruppoSanguigno}
+              </span>
+              <button
+                onClick={() => setModaleVerificaAperta(true)}
+                className="text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full hover:bg-emerald-100 transition flex items-center gap-1"
+                title="Visualizza certificazione Esse3 Ateneo"
+              >
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                🎓 Verificato SSO UniPv
+              </button>
+            </div>
+
+            <h1 className="text-2xl font-black text-stone-900 tracking-tight leading-tight pt-0.5">
+              {profilo.nome}, {profilo.eta}
+            </h1>
+
+            <div className="flex items-center gap-1.5 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl w-fit">
+              <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>Moltiplicatore Serie: x1.5</span>
+            </div>
+          </div>
+
+          {/* Avatar Interattivo con Badge Tu */}
+          <div className="relative shrink-0 pt-1">
+            <CustomAvatar
+              config={avatar}
+              size="lg"
+              onClick={() => setModaleAvatarAperta(true)}
+              felice={donazioneConvalidata}
+            />
+            <span className="absolute -bottom-1 -right-1 bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow-md">
+              Tu
+            </span>
+          </div>
+        </div>
+
+        {/* Pulsante rapido personalizzazione */}
+        <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+          <span className="text-stone-500 font-medium">
+            {profilo.ruoloUtente === 'neo' ? '🌱 Cerco Tutor per la 1ª donazione' : '🏅 Tutor Attivo UniPv'}
+          </span>
+          <button
+            onClick={() => setModaleAvatarAperta(true)}
+            className="font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Shop Avatar & Guardaroba →
+          </button>
+        </div>
+      </div>
+
+      {/* 2. LA BARRA DEI GIORNI CON LA GOCCIA (UNICA BARRA INTERATTIVA & TRASCINABILE) */}
+      <BarraGocciaProgressiva
+        giorniTrascorsi={giorniTrascorsi}
+        setGiorniTrascorsi={setGiorniTrascorsi}
+        tipoDonatrice={tipoDonatrice}
+        setTipoDonatrice={setTipoDonatrice}
+      />
+
+      {/* 3. CARD AZIONE RAPIDA "1ª DONAZIONE IN 3 PASSI" */}
+      <div className="bg-white p-5 rounded-3xl border border-stone-200/80 shadow-sm space-y-3.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black uppercase tracking-wider text-stone-900 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-rose-600" /> 1ª Donazione in 3 Passi
+          </span>
+          <span className="text-xs font-black text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200">
+            {donazioneConvalidata ? 'Completato 🎉' : compagnoPrenotato ? 'Passo 2 di 3' : idoneitaVerificata ? 'Passo 1 di 3' : 'Inizia Ora'}
+          </span>
+        </div>
+
+        <div className="relative pt-2 pb-1">
+          <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden border border-stone-200">
+            <div
+              className="bg-rose-600 h-full rounded-full transition-all duration-300"
+              style={{
+                width: donazioneConvalidata ? '100%' : compagnoPrenotato ? '66%' : idoneitaVerificata ? '33%' : '5%'
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] font-bold text-stone-500 mt-2">
+            <span className={idoneitaVerificata ? 'text-rose-700 font-extrabold' : ''}>1. Idoneità</span>
+            <span className={compagnoPrenotato ? 'text-rose-700 font-extrabold' : ''}>2. Tutor</span>
+            <span className={donazioneConvalidata ? 'text-emerald-700 font-extrabold' : ''}>3. Check-in San Matteo</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button
+            onClick={() => setSchedaAttiva('compagno')}
+            className="bg-stone-900 hover:bg-stone-800 text-white font-extrabold text-xs py-3 px-3 rounded-2xl shadow-sm flex items-center justify-center gap-1.5 transition"
+          >
+            {idoneitaVerificata ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <ClipboardList className="w-4 h-4" />}
+            {idoneitaVerificata ? 'Idonea (Fatto ✓)' : 'Verifica 60s'}
+          </button>
+
+          <button
+            onClick={() => setSchedaAttiva('compagno')}
+            className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs py-3 px-3 rounded-2xl shadow-sm flex items-center justify-center gap-1.5 transition"
+          >
+            <Users className="w-4 h-4" />
+            {compagnoPrenotato ? compagnoPrenotato.nome : 'Trova Tutor'}
+          </button>
+        </div>
+
+        {compagnoPrenotato && !donazioneConvalidata && (
+          <div className="pt-2 border-t border-stone-100">
+            <button
+              onClick={() => setModaleConvalidaAperta(true)}
+              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black rounded-2xl text-xs shadow-md flex items-center justify-center gap-2 transition animate-pulse"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Convalida Codice San Matteo (+300 Gocce)
+            </button>
+          </div>
+        )}
+
+        {donazioneConvalidata && (
+          <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-1">
+            <p className="text-xs font-black text-emerald-800">
+              🎉 Donazione al Policlinico San Matteo Convalidata!
+            </p>
+            <p className="text-[11px] text-emerald-700">
+              Hai sbloccato il tuo Gruppo 0+ e 300 Gocce per {profilo.facolta}!
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TAB 2: DAILY DROP TRIVIA, SERIE & PATTO SOCIALE (MISSIONI OGGI)
+// ============================================================================
+function SchermataMissioniOggi({
+  gocce,
+  aggiungiGocce,
+  giorniSerie,
+  setGiorniSerie,
+  mostraNotifica,
+  giornataQuiz,
+  setGiornataQuiz,
+  risposteQuiz,
+  setRisposteQuiz,
+  bauleGiornoRiscattato,
+  setBauleGiornoRiscattato,
+  scossaInviata,
+  setScossaInviata
+}) {
+  // DATABASE DI 12 DOMANDE DIVISE IN 3 GIORNATE / SET DA 4
+  const databaseDomande = [
+    // --- GIORNO 1: MITI E VERITÀ CLINICHE ---
+    {
+      id: 1,
+      giorno: 1,
+      domanda: 'Quanto sangue viene prelevato in una normale donazione intera?',
+      opzioni: ['Circa 450 ml (meno del 10% del totale)', 'Circa 1 litro e mezzo', 'Circa 200 ml', 'Dipende dal peso corporeo'],
+      corretta: 0,
+      spiegazione: 'Il volume standard è di 450 ml ± 10%, stabilito per legge per garantire la sicurezza assoluta del donatore e la massima resa terapeutica.'
+    },
+    {
+      id: 2,
+      giorno: 1,
+      domanda: 'Cosa bisogna bere e mangiare la mattina prima del prelievo?',
+      opzioni: ['Digiuno assoluto dalla mezzanotte precedente', 'Colazione abbondante con latte intero e cornetti alla crema', 'Tè o caffè poco zuccherato, fette biscottate o frutta (no latticini)', 'Solo bevande energetiche zuccherate'],
+      corretta: 2,
+      spiegazione: 'È fondamentale una colazione leggera senza latte o latticini: i grassi possono intorbidare il plasma e interferire con le analisi del sangue.'
+    },
+    {
+      id: 3,
+      giorno: 1,
+      domanda: 'Se fai un tatuaggio o un piercing, quanto tempo devi aspettare prima di donare?',
+      opzioni: ['1 mese', '4 mesi per sicurezza clinica', '1 anno intero', 'Nessuna attesa se fatto in studio sterile'],
+      corretta: 1,
+      spiegazione: 'Le linee guida trasfusionali nazionali prescrivono 4 mesi di sospensione per il periodo finestra delle infezioni trasmissibili via sangue.'
+    },
+    {
+      id: 4,
+      giorno: 1,
+      domanda: 'In quanto tempo il corpo ripristina la parte liquida (plasma) del sangue donato?',
+      opzioni: ['In circa 24-48 ore bevendo molti liquidi', 'In circa 3 settimane', 'In 90 giorni precisi', 'In meno di 30 minuti'],
+      corretta: 0,
+      spiegazione: 'Il volume plasmatico si rigenera completamente in 24-48 ore bevendo abbondante acqua. I globuli rossi si rigenerano poi in qualche settimana.'
+    },
+
+    // --- GIORNO 2: LA RETE DI PAVIA & SALUTE ---
+    {
+      id: 5,
+      giorno: 2,
+      domanda: 'Dove si trova il Centro Trasfusionale SIMT di riferimento a Pavia?',
+      opzioni: ['Al Policlinico San Matteo (Padiglione 10 / SIMT)', 'In piazza della Vittoria', 'Presso il Castello Visconteo', 'Al Polo Didattico Cravino'],
+      corretta: 0,
+      spiegazione: 'Il Servizio di Immunoematologia e Medicina Trasfusionale (SIMT) ha sede al Padiglione 10 del Policlinico San Matteo di Pavia.'
+    },
+    {
+      id: 6,
+      giorno: 2,
+      domanda: 'Quale test di laboratorio viene inviato a casa del donatore dopo ogni prelievo?',
+      opzioni: ['Solo il test del gruppo sanguigno', 'Esami ematochimici completi gratuiti (emocromo, ferritina, fegato, reni)', 'Nessun esame, solo ricevuta cartacea', 'Solo il controllo del colesterolo'],
+      corretta: 1,
+      spiegazione: 'I donatori ricevono gratuitamente via posta o fascicolo sanitario le analisi complete del sangue: un check-up preventivo costante della salute.'
+    },
+    {
+      id: 7,
+      giorno: 2,
+      domanda: 'Qual è l’intervallo minimo tra due donazioni di sangue intero per le donne in età fertile?',
+      opzioni: ['90 giorni (massimo 2 volte l’anno)', '120 giorni (massimo 2 volte l’anno per legge)', '30 giorni', '180 giorni'],
+      corretta: 1,
+      spiegazione: 'In Italia le donne in età fertile possono donare sangue intero al massimo 2 volte all’anno con un intervallo minimo di 120 giorni per tutelare le riserve di ferro.'
+    },
+    {
+      id: 8,
+      giorno: 2,
+      domanda: 'Chi ha il gruppo sanguigno 0 Rh negativo è definito:',
+      opzioni: ['Ricevitore universale', 'Donatore universale di globuli rossi', 'Donatore universale di solo plasma', 'Incompatibile con qualsiasi gruppo'],
+      corretta: 1,
+      spiegazione: 'Il gruppo 0 negativo non presenta antigeni A, B né Rh sui globuli rossi, quindi può essere trasfuso in emergenza a qualsiasi paziente.'
+    },
+
+    // --- GIORNO 3: PLASMAFERESI & IMPATTO SOCIALE ---
+    {
+      id: 9,
+      giorno: 3,
+      domanda: 'A cosa serve principalmente il plasma donato tramite aferesi?',
+      opzioni: ['Solo a idratare i pazienti', 'A produrre farmaci plasmaderivati salvavita (albumina, immunoglobuline)', 'A conservare i globuli rossi', 'A creare sostituti sintetici'],
+      corretta: 1,
+      spiegazione: 'Il plasma è la materia prima insostituibile per i farmaci emoderivati salvavita destinati a pazienti emofilici o immunodepressi.'
+    },
+    {
+      id: 10,
+      giorno: 3,
+      domanda: 'Dopo quanto tempo si può donare di nuovo il solo plasma (plasmaferesi)?',
+      opzioni: ['Già dopo 14 giorni (consigliato ogni 30 giorni)', 'Solo dopo 120 giorni', 'Dopo 6 mesi', 'Una volta all’anno'],
+      corretta: 0,
+      spiegazione: 'Poiché i globuli rossi vengono restituiti e le proteine plasmatiche si rigenerano rapidamente, l’intervallo minimo per il plasma è di sole due settimane.'
+    },
+    {
+      id: 11,
+      giorno: 3,
+      domanda: 'Perché l’app IN VEIN richiede la mail @universitadipavia.it?',
+      opzioni: ['Per inviare newsletter pubblicitarie', 'Per validare con certezza il Dipartimento universitario ed evitare voti falsi', 'Per registrare le presenze alle lezioni', 'Per accedere a Spotify'],
+      corretta: 1,
+      spiegazione: 'La verifica istituzionale UniPv garantisce che i punti vadano solo al reale Dipartimento di appartenenza e certifica la serietà dei Tutor.'
+    },
+    {
+      id: 12,
+      giorno: 3,
+      domanda: 'Cosa accade se doni sangue il giorno di un esame universitario o al lavoro?',
+      opzioni: ['Perdi la sessione d’esame', 'La legge italiana riconosce una giornata di riposo retribuita e giustificazione ufficiale', 'Devi sostenere l’esame in piedi', 'Nessuna tutela prevista'],
+      corretta: 1,
+      spiegazione: 'La legge 219/2005 garantisce il diritto a una giornata di riposo retribuita per i lavoratori dipendenti e giustificazione formale certificata per gli studenti.'
+    }
+  ];
+
+  // Domande attive per la giornata selezionata
+  const domandeOggi = databaseDomande.filter((d) => d.giorno === giornataQuiz);
+
+  const rispondi = (domandaId, indiceOpzione) => {
+    if (risposteQuiz[domandaId] !== undefined) return;
+
+    const domanda = databaseDomande.find((d) => d.id === domandaId);
+    const corretta = indiceOpzione === domanda.corretta;
+
+    setRisposteQuiz((prev) => ({
+      ...prev,
+      [domandaId]: {
+        selezionata: indiceOpzione,
+        esatta: corretta
+      }
+    }));
+
+    if (corretta) {
+      aggiungiGocce(15);
+      mostraNotifica('Risposta Corretta! 🎯', '+15 Gocce per la tua conoscenza clinica.', 15);
+    } else {
+      mostraNotifica('Non esatta 💡', 'Leggi la spiegazione clinica per imparare.', 0);
+    }
+  };
+
+  // Calcolo avanzamento della giornata
+  const risposteDateOggi = domandeOggi.filter((d) => risposteQuiz[d.id] !== undefined).length;
+  const tutteCompletateOggi = risposteDateOggi === domandeOggi.length;
+  const bauleRiscattato = !!bauleGiornoRiscattato[giornataQuiz];
+
+  const riscattaBaule = () => {
+    if (!tutteCompletateOggi || bauleRiscattato) return;
+    aggiungiGocce(100);
+    setGiorniSerie((prev) => prev + 1);
+    setBauleGiornoRiscattato((prev) => ({
+      ...prev,
+      [giornataQuiz]: true
+    }));
+    mostraNotifica('🎉 Baule del Giorno Sbloccato!', '+100 Gocce e +1 Giorno alla tua Serie!', 100);
+  };
+
+  const simulaAltroGiorno = () => {
+    const prossimo = giornataQuiz >= 3 ? 1 : giornataQuiz + 1;
+    setGiornataQuiz(prossimo);
+    mostraNotifica(`Passato a Giorno #${prossimo}`, `Nuove 4 domande cliniche disponibili (Set ${prossimo}/3).`, 0);
+  };
+
+  const mandaScossaLorenzo = () => {
+    if (scossaInviata) return;
+    setScossaInviata(true);
+    aggiungiGocce(10);
+    mostraNotifica('⚡ Scossa Inviata a Lorenzo M.!', 'Hai ricordato a Lorenzo di bere e donare (+10 Gocce per te).', 10);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* HEADER MISSIONI CON SWITCHER GIORNO PER LA PRESENTAZIONE */}
+      <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-stone-900 leading-tight">
+                Daily Drop Trivia
+              </h2>
+              <p className="text-[11px] text-stone-500 font-medium">
+                Set #{giornataQuiz} di 3 • 4 quiz clinici quotidiani
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={simulaAltroGiorno}
+            className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold transition flex items-center space-x-1"
+          >
+            <span>🔄 Giorno #{giornataQuiz}</span>
+          </button>
+        </div>
+
+        {/* PROGRESSO SET GIORNALIERO */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-stone-700">
+              Progresso quiz oggi: {risposteDateOggi} / {domandeOggi.length}
+            </span>
+            <span className="text-stone-500 font-semibold">
+              {Math.round((risposteDateOggi / domandeOggi.length) * 100)}%
+            </span>
+          </div>
+          <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-rose-600 rounded-full transition-all duration-300"
+              style={{ width: `${(risposteDateOggi / domandeOggi.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* LISTA DEI 4 QUIZ GIORNALIERI (USA-E-GETTA) */}
+      <div className="space-y-3">
+        {domandeOggi.map((d, index) => {
+          const statoRisposta = risposteQuiz[d.id];
+          const giaRisposta = statoRisposta !== undefined;
+
+          return (
+            <div
+              key={d.id}
+              className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-3"
+            >
+              <div className="flex items-start justify-between space-x-2">
+                <span className="inline-block px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                  Domanda {index + 1} • +15 Gocce
+                </span>
+                {giaRisposta && (
+                  <span
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                      statoRisposta.esatta
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}
+                  >
+                    {statoRisposta.esatta ? 'Esatto ✓' : 'Sbagliato ✕'}
+                  </span>
+                )}
+              </div>
+
+              <h3 className="text-sm font-bold text-stone-900 leading-snug">
+                {d.domanda}
+              </h3>
+
+              {/* OPZIONI */}
+              <div className="space-y-2 pt-1">
+                {d.opzioni.map((opzione, opzIdx) => {
+                  let buttonStyle = 'bg-stone-50 hover:bg-stone-100 text-stone-800 border-stone-200';
+
+                  if (giaRisposta) {
+                    if (opzIdx === d.corretta) {
+                      buttonStyle = 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold';
+                    } else if (statoRisposta.selezionata === opzIdx && !statoRisposta.esatta) {
+                      buttonStyle = 'bg-rose-50 border-rose-500 text-rose-900 line-through';
+                    } else {
+                      buttonStyle = 'bg-stone-50 text-stone-400 opacity-60 border-stone-200';
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={opzIdx}
+                      disabled={giaRisposta}
+                      onClick={() => rispondi(d.id, opzIdx)}
+                      className={`w-full text-left p-3 rounded-2xl border text-xs transition duration-150 flex items-start space-x-2.5 ${buttonStyle}`}
+                    >
+                      <span className="w-5 h-5 rounded-full bg-white border border-stone-200 flex items-center justify-center shrink-0 text-[10px] font-bold text-stone-700">
+                        {String.fromCharCode(65 + opzIdx)}
+                      </span>
+                      <span className="leading-snug pt-0.5">{opzione}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* SPIEGAZIONE MEDICA DOPO AVER RISPOSTO */}
+              {giaRisposta && (
+                <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200 text-[11px] text-stone-700 leading-relaxed flex items-start space-x-2">
+                  <span className="text-sm shrink-0">🔬</span>
+                  <div>
+                    <strong className="font-bold text-stone-900">Spiegazione SIMT:</strong> {d.spiegazione}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* BAULE DEL GIORNO SBLOCCABILE */}
+      <div
+        className={`rounded-3xl p-5 border transition-all ${
+          bauleRiscattato
+            ? 'bg-emerald-50 border-emerald-200'
+            : tutteCompletateOggi
+            ? 'bg-amber-50 border-amber-300 shadow-md ring-2 ring-amber-400/40'
+            : 'bg-white border-stone-200/90'
+        }`}
+      >
+        <div className="flex items-center space-x-4">
+          <div className="text-3xl shrink-0">
+            {bauleRiscattato ? '🎁' : tutteCompletateOggi ? '📦' : '🔒'}
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-black text-stone-900">
+              {bauleRiscattato
+                ? 'Baule di Oggi Riscattato!'
+                : tutteCompletateOggi
+                ? 'Baule del Giorno Pronto!'
+                : 'Baule del Giorno (Bloccato)'}
+            </h4>
+            <p className="text-[11px] text-stone-600 mt-0.5">
+              {bauleRiscattato
+                ? '+100 Gocce aggiunte e serie prolungata a ' + giorniSerie + ' giorni.'
+                : tutteCompletateOggi
+                ? 'Hai completato tutti e 4 i quiz clinici di oggi. Tocca per aprire!'
+                : 'Rispondi a tutte le 4 domande di oggi per sbloccare +100 Gocce e +1g serie.'}
+            </p>
+          </div>
+        </div>
+
+        {tutteCompletateOggi && !bauleRiscattato && (
+          <button
+            onClick={riscattaBaule}
+            className="w-full mt-3.5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition"
+          >
+            ✨ APRI BAULE GIORNALIERO (+100 GOCCE)
+          </button>
+        )}
+      </div>
+
+      {/* CARD PATTO DI CORSO CON LORENZO M. */}
+      <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+              👥
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-stone-900">
+                Patto di Corso: Lorenzo M.
+              </h3>
+              <p className="text-[11px] text-stone-500 font-medium">
+                Ingegneria Industriale • 3° Anno • Serie: 4g 🔥
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md">
+            Patto Attivo
+          </span>
+        </div>
+
+        <p className="text-xs text-stone-600 leading-snug">
+          Avete stipulato un impegno reciproco: se uno dei due salta 2 giorni consecutivi di quiz o idratazione, entrambi perdono 25 Gocce bonus.
+        </p>
+
+        <button
+          onClick={mandaScossaLorenzo}
+          disabled={scossaInviata}
+          className={`w-full py-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 ${
+            scossaInviata
+              ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+              : 'bg-stone-900 hover:bg-stone-800 text-white active:scale-95'
+          }`}
+        >
+          <span>{scossaInviata ? '✓ Scossa Inviata Oggi' : '⚡ Manda Scossa a Lorenzo (+10 Gocce)'}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TAB 3: ANAMNESI, PRE-CONTROLLO, 12 FAQ & TUTOR CHAT REALISTICA
+// ============================================================================
+function SchermataCompagnoDonazione({
+  idoneitaVerificata,
+  setIdoneitaVerificata,
+  compagnoPrenotato,
+  setCompagnoPrenotato,
+  donazioneConvalidata,
+  setModaleConvalidaAperta,
+  aggiungiGocce,
+  nome,
+  facolta,
+  chatMessaggi,
+  setChatMessaggi,
+  mostraNotifica
+}) {
+  const [sottoScheda, setSottoScheda] = useState('idoneita'); // 'idoneita' | 'tutor'
+  const [domandaAttuale, setDomandaAttuale] = useState(0);
+  const [risposte, setRisposte] = useState({});
+  const [testCompletato, setTestCompletato] = useState(idoneitaVerificata);
+  const [slotScelto, setSlotScelto] = useState('Cortile San Tommaso - Giovedì 09:30');
+  const [messaggioTesto, setMessaggioTesto] = useState('');
+  const [staScrivendo, setStaScrivendo] = useState(false);
+  const [faqAperta, setFaqAperta] = useState(null); // Tutte e 12 chiuse di default!
+
+  // --- LE 10 DOMANDE DEL PRE-CONTROLLO RAPIDO CLINICO ---
+  const domandeAnamnesi = [
+    {
+      id: 1,
+      testo: 'Hai tra i 18 e i 65 anni compiuti?',
+      dettaglio: 'Requisito anagrafico obbligatorio per la legge italiana sui donatori.',
+      opzioni: ['Sì', 'No']
+    },
+    {
+      id: 2,
+      testo: 'Il tuo peso corporeo è di almeno 50 kg?',
+      dettaglio: 'La massa corporea garantisce che la quantità prelevata (450ml) sia ben tollerata.',
+      opzioni: ['Sì', 'No']
+    },
+    {
+      id: 3,
+      testo: 'Ti senti in buono stato di salute generale oggi?',
+      dettaglio: 'Assenza di febbre, infezioni acute o sintomi influenzali nelle ultime 2 settimane.',
+      opzioni: ['Sì', 'No']
+    },
+    {
+      id: 4,
+      testo: 'Hai fatto tatuaggi, piercing o agopuntura negli ultimi 4 mesi?',
+      dettaglio: 'Periodo finestra di sicurezza biologica per escludere infezioni trasmissibili.',
+      opzioni: ['No', 'Sì']
+    },
+    {
+      id: 5,
+      testo: 'Hai assunto antibiotici negli ultimi 15 giorni o antinfiammatori negli ultimi 5?',
+      dettaglio: 'I farmaci possono influire sull’attività delle piastrine e sulla qualità del plasma.',
+      opzioni: ['No', 'Sì']
+    },
+    {
+      id: 6,
+      testo: 'Hai subito interventi chirurgici maggiori negli ultimi 4 mesi?',
+      dettaglio: 'Necessario per assicurarsi che i tessuti e i valori ematici siano ripristinati.',
+      opzioni: ['No', 'Sì']
+    },
+    {
+      id: 7,
+      testo: 'Hai viaggiato in paesi tropicali o a rischio malaria negli ultimi 6 mesi?',
+      dettaglio: 'Criterio di sospensione temporanea secondo le tabelle internazionali.',
+      opzioni: ['No', 'Sì']
+    },
+    {
+      id: 8,
+      testo: 'Hai mai avuto epatite B, epatite C, sifilide o infezione da HIV?',
+      dettaglio: 'Criterio di esclusione permanente per la sicurezza trasfusionale.',
+      opzioni: ['No', 'Sì']
+    },
+    {
+      id: 9,
+      testo: 'Per le donne: hai partorito o interrotto una gravidanza negli ultimi 6 mesi?',
+      dettaglio: 'Periodo necessario per il recupero delle riserve organiche di ferro e ferritina.',
+      opzioni: ['No', 'Sì']
+    },
+    {
+      id: 10,
+      testo: 'Hai una corporatura minuta (50-54 kg) o soffri di ferritina/emoglobina ballerina?',
+      dettaglio: 'Domanda clinica intelligente: orienta alla plasmaferesi (aferesi selettiva).',
+      opzioni: ['Sì, preferirei plasmaferesi', 'No, ottimi valori per sangue intero']
+    }
+  ];
+
+  const rispondiDomanda = (indiceOpzione) => {
+    const nuova = { ...risposte, [domandaAttuale]: indiceOpzione };
+    setRisposte(nuova);
+
+    if (domandaAttuale < domandeAnamnesi.length - 1) {
+      setDomandaAttuale((prev) => prev + 1);
+    } else {
+      setTestCompletato(true);
+      setIdoneitaVerificata(true);
+      aggiungiGocce(50);
+      mostraNotifica('Pre-Controllo Completato! 🎉', '+50 Gocce aggiunte. Ora puoi fissare il Tutor.', 50);
+    }
+  };
+
+  const resetTest = () => {
+    setDomandaAttuale(0);
+    setRisposte({});
+    setTestCompletato(false);
+  };
+
+  // --- 12 FAQ CLINICHE E PRATICHE TUTTE CHIUSE DI DEFAULT ---
+  const listaFaq = [
+    {
+      q: 'Fa male donare il sangue? Quanto dura?',
+      a: 'Il prelievo vero e proprio dura circa 7-10 minuti ed è praticamente indolore: si avverte solo un piccolo fastidio momentaneo al momento dell\'inserimento dell\'ago. L\'intero percorso (colloquio, visita, donazione e ristoro) dura circa 45 minuti.'
+    },
+    {
+      q: 'Cosa devo mangiare a colazione la mattina del prelievo?',
+      a: 'Una colazione leggera con tè, caffè, spremuta d\'arancia, fette biscottate o frutta fresca. Evita categoricamente latte, yogurt, burro, cornetti farciti o grassi, perché renderebbero torbido il plasma impedendo le analisi di laboratorio.'
+    },
+    {
+      q: 'Posso donare se ho fatto un tatuaggio o un piercing recente?',
+      a: 'Sì, ma è necessario attendere 4 mesi dal momento dell\'esecuzione del tatuaggio o piercing, a tutela delle finestre sierologiche per la sicurezza del ricevente.'
+    },
+    {
+      q: 'Posso donare con il ciclo mestruale?',
+      a: 'Non c\'è alcuna controindicazione assoluta se ti senti bene e i livelli di emoglobina sono nella norma. È consigliabile comunque donare qualche giorno dopo la fine del ciclo oppure optare per la donazione di plasma.'
+    },
+    {
+      q: 'Quanto sangue viene prelevato e ogni quanto tempo posso donare?',
+      a: 'Vengono prelevati esattamente 450 ml (± 10%). Per legge in Italia, gli uomini possono donare sangue intero ogni 90 giorni (fino a 4 volte l\'anno), le donne in età fertile ogni 120 giorni (fino a 2 volte l\'anno).'
+    },
+    {
+      q: 'Riceverò le analisi del sangue complete e gratuite a casa?',
+      a: 'Sì, a ogni donazione viene eseguito un controllo ematochimico completo (emocromo, ferritina, colesterolo, glicemia, fegato, reni e screening infettivo) e i referti vengono caricati sul Fascicolo Sanitario Elettronico o recapitati a casa gratuitamente.'
+    },
+    {
+      q: 'Perché c\'è differenza tra donazione di sangue intero e plasmaferesi?',
+      a: 'Nel sangue intero si prelevano tutte le componenti. Nella plasmaferesi un separatore cellulare trattiene solo la parte liquida ricca di proteine e restituisce i globuli rossi: è meno affaticante e i tempi di recupero sono di pochissimi giorni (già dopo 14-30 giorni si può rifare).'
+    },
+    {
+      q: 'Posso fare sport o andare in palestra dopo la donazione?',
+      a: 'Il giorno del prelievo è raccomandato il riposo da sforzi fisici intensi e sport pesanti per permettere al sistema cardiovascolare di riequilibrare i volumi liquidi. Dal giorno successivo si può riprendere l\'attività regolarmente.'
+    },
+    {
+      q: 'Come funziona la privacy dei miei dati sanitari tra App e San Matteo?',
+      a: 'L\'applicazione IN VEIN non memorizza cartelle cliniche né dati sanitari sensibili. L\'avvenuta donazione viene convalidata tramite un codice numerico anonimo certificato dal SIMT nel pieno rispetto del GDPR.'
+    },
+    {
+      q: 'Perché serve l\'approvazione del medico del Centro Trasfusionale?',
+      a: 'Per legge e a tutela della tua salute, l\'idoneità alla donazione è un atto medico vincolante. Il colloquio e la visita con il medico del SIMT garantiscono la massima sicurezza sia per il donatore che per il ricevente.'
+    },
+    {
+      q: 'Ho la pressione un po\' bassa o prendo farmaci, posso donare lo stesso?',
+      a: 'I limiti ammessi sono pressione massima tra 110 e 180 mmHg e minima tra 60 e 100 mmHg. Molti farmaci comuni (come pillola anticoncezionale o antistaminici) sono compatibili, ma vanno sempre dichiarati al medico in fase di visita.'
+    },
+    {
+      q: 'Perché l\'autenticazione con mail @universitadipavia.it è sicura?',
+      a: 'L\'accesso istituzionale UniPv garantisce che ogni utente sia un reale studente pavese, tutelando la correttezza della sfida tra Dipartimenti e assicurando che la community dei Tutor sia sicura, tracciata e fidata.'
+    }
+  ];
+
+  // --- SELETTORE DEI 2 SLOT INCONTRO ---
+  const slotDisponibili = [
+    {
+      id: 'san_tommaso',
+      titolo: 'Autoemoteca Cortile San Tommaso',
+      dettaglio: 'Giovedì 09:30 • Piazza del Lino (Davanti ad Aula Magna)',
+      tutor: 'Marco V. (5° Anno Medicina)'
+    },
+    {
+      id: 'san_matteo',
+      titolo: 'Centro Trasfusionale SIMT Policlinico San Matteo',
+      dettaglio: 'Venerdì 10:15 • Padiglione 10 (Ingresso Viale Camillo Golgi)',
+      tutor: 'Chiara L. (Farmacia & Bio)'
+    }
+  ];
+
+  const prenotaIncontro = () => {
+    setCompagnoPrenotato(true);
+    aggiungiGocce(150);
+    mostraNotifica('Appuntamento Fissato! 🎉', '+150 Gocce! Biglietto digitale generato per ' + slotScelto, 150);
+
+    // Invia messaggio automatico di benvenuto dal tutor nella chat
+    setChatMessaggi((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        mittente: 'tutor',
+        testo: `Perfetto Serena! Ti ho confermato per ${slotScelto}. Ci vediamo lì 10 minuti prima. Se hai qualsiasi dubbio sull'ago o sulla colazione, scrivimi pure qui!`,
+        orario: '10:02',
+        spunte: true
+      }
+    ]);
+  };
+
+  // --- INVIO MESSAGGIO E RISPOSTA CONTESTUALE DEL TUTOR ---
+  const inviaMessaggio = (testoDaInviare) => {
+    const msg = testoDaInviare || messaggioTesto;
+    if (!msg.trim()) return;
+
+    const nuovoMsg = {
+      id: Date.now(),
+      mittente: 'utente',
+      testo: msg,
+      orario: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      spunte: true
+    };
+
+    setChatMessaggi((prev) => [...prev, nuovoMsg]);
+    setMessaggioTesto('');
+
+    // Avvia simulazione digitazione tutor (900ms)
+    setStaScrivendo(true);
+
+    setTimeout(() => {
+      setStaScrivendo(false);
+      const testoLower = msg.toLowerCase();
+      let rispostaTutor = 'Ricevuto Serena! Preparati bevendo tanta acqua oggi. Ci vediamo lì per fare la prima donazione insieme!';
+
+      if (testoLower.includes('ago') || testoLower.includes('paura') || testoLower.includes('male')) {
+        rispostaTutor = 'Tranquilla Serena! L\'ago dell\'emoteca è sottilissimo e si sente solo un piccolo pizzicotto di 2 secondi. Io sarò seduto proprio di fianco a te a chiacchierare per distrarti!';
+      } else if (testoLower.includes('colazione') || testoLower.includes('caffè') || testoLower.includes('mangiare') || testoLower.includes('fame')) {
+        rispostaTutor = 'Ricorda: colazione leggera! Tè o caffè poco zuccherato, fette biscottate con marmellata o frutta. NIENTE latte o latticini la mattina della donazione perché intorbidano il plasma!';
+      } else if (testoLower.includes('orario') || testoLower.includes('dove') || testoLower.includes('quando') || testoLower.includes('troviamo')) {
+        rispostaTutor = 'Ci vediamo 10 minuti prima al punto d\'incontro stabilito! Ti aspetto all\'ingresso con la spilla rossa di IN VEIN, non puoi sbagliare! 😊';
+      }
+
+      setChatMessaggi((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          mittente: 'tutor',
+          testo: rispostaTutor,
+          orario: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          spunte: true
+        }
+      ]);
+    }, 900);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* SOTTOSCHEDE: 1. PRE-CONTROLLO vs 2. TUTOR & CHAT */}
+      <div className="flex bg-stone-100 p-1 rounded-2xl border border-stone-200">
+        <button
+          onClick={() => setSottoScheda('idoneita')}
+          className={`flex-1 py-2 text-xs font-black rounded-xl transition ${
+            sottoScheda === 'idoneita'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
+          }`}
+        >
+          📋 1. Pre-Controllo & FAQ
+        </button>
+        <button
+          onClick={() => setSottoScheda('tutor')}
+          className={`flex-1 py-2 text-xs font-black rounded-xl transition relative ${
+            sottoScheda === 'tutor'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
+          }`}
+        >
+          <span>💬 2. Tutor & Chat</span>
+          {!compagnoPrenotato && (
+            <span className="w-2 h-2 rounded-full bg-rose-600 absolute top-2 right-4 ring-2 ring-white" />
+          )}
+        </button>
+      </div>
+
+      {/* SOTTOSCHEDA 1: PRE-CONTROLLO RAPIDO E 12 FAQ */}
+      {sottoScheda === 'idoneita' && (
+        <div className="space-y-4">
+          {!testCompletato ? (
+            <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                  Domanda {domandaAttuale + 1} di {domandeAnamnesi.length}
+                </span>
+                <span className="text-xs font-bold text-stone-400">
+                  {Math.round(((domandaAttuale + 1) / domandeAnamnesi.length) * 100)}%
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-stone-900 leading-snug">
+                  {domandeAnamnesi[domandaAttuale].testo}
+                </h3>
+                <p className="text-xs text-stone-500">
+                  {domandeAnamnesi[domandaAttuale].dettaglio}
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                {domandeAnamnesi[domandaAttuale].opzioni.map((opz, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => rispondiDomanda(idx)}
+                    className="w-full p-3.5 bg-stone-50 hover:bg-rose-50 hover:border-rose-300 border border-stone-200 text-stone-800 rounded-2xl text-xs font-bold transition flex items-center justify-between group active:scale-95"
+                  >
+                    <span>{opz}</span>
+                    <span className="text-stone-400 group-hover:text-rose-600 transition">→</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-4">
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">
+                  ✓
+                </div>
+                <h3 className="text-base font-black text-emerald-900">
+                  Pre-Controllo Superato! 🎉
+                </h3>
+                <p className="text-xs text-emerald-700 leading-relaxed">
+                  I parametri preliminari di Serena sono conformi. Ricorda che l'idoneità clinica definitiva viene sempre confermata dal medico del Centro Trasfusionale SIMT di Pavia.
+                </p>
+              </div>
+
+              <div className="flex space-x-2 pt-1">
+                <button
+                  onClick={resetTest}
+                  className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl text-xs font-bold transition"
+                >
+                  Ripeti Test
+                </button>
+                <button
+                  onClick={() => setSottoScheda('tutor')}
+                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black shadow-md shadow-rose-600/20 transition flex items-center justify-center space-x-1"
+                >
+                  <span>Passa alla Chat col Tutor</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ACCORDION DELLE 12 FAQ CLINICHE (TUTTE CHIUSE DI DEFAULT) */}
+          <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-3">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 text-base font-bold">
+                💡
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-stone-900">
+                  FAQ Cliniche & Pratiche
+                </h3>
+                <p className="text-[11px] text-stone-500">
+                  12 risposte dei medici del SIMT San Matteo di Pavia
+                </p>
+              </div>
+            </div>
+
+            <div className="divide-y divide-stone-100 pt-1">
+              {listaFaq.map((faq, idx) => {
+                const isOpen = faqAperta === idx;
+                return (
+                  <div key={idx} className="py-2.5 first:pt-0 last:pb-0">
+                    <button
+                      onClick={() => setFaqAperta(isOpen ? null : idx)}
+                      className="w-full text-left flex items-start justify-between space-x-2 py-1 group"
+                    >
+                      <span className="text-xs font-bold text-stone-800 group-hover:text-rose-600 transition leading-snug">
+                        {faq.q}
+                      </span>
+                      <span className="text-stone-400 text-xs shrink-0 pt-0.5">
+                        {isOpen ? '▲' : '▼'}
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <p className="text-xs text-stone-600 leading-relaxed pt-2 pb-1 pl-1">
+                        {faq.a}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SOTTOSCHEDA 2: TUTOR, SELETTORE SLOT & CHAT STILE WHATSAPP */}
+      {sottoScheda === 'tutor' && (
+        <div className="space-y-4">
+          {/* SELETTORE DEGLI SLOT INCONTRO / BIGLIETTO DIGITALE */}
+          <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-stone-900">
+                    Slot Incontro Accompagnato
+                  </h3>
+                  <p className="text-[11px] text-stone-500">
+                    Scegli dove incontrare il tuo Tutor a Pavia
+                  </p>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 bg-rose-50 text-rose-700 rounded-md text-[10px] font-black uppercase">
+                +150 Gocce
+              </span>
+            </div>
+
+            {!compagnoPrenotato ? (
+              <div className="space-y-2 pt-1">
+                {slotDisponibili.map((slot) => (
+                  <label
+                    key={slot.id}
+                    onClick={() => setSlotScelto(slot.titolo)}
+                    className={`block p-3 rounded-2xl border text-xs cursor-pointer transition ${
+                      slotScelto === slot.titolo
+                        ? 'border-rose-500 bg-rose-50/50 shadow-sm'
+                        : 'border-stone-200 hover:border-stone-300 bg-stone-50/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-stone-900">{slot.titolo}</span>
+                      <input
+                        type="radio"
+                        name="slot"
+                        checked={slotScelto === slot.titolo}
+                        onChange={() => setSlotScelto(slot.titolo)}
+                        className="text-rose-600 focus:ring-rose-500"
+                      />
+                    </div>
+                    <p className="text-[11px] text-stone-600 mt-1">{slot.dettaglio}</p>
+                    <p className="text-[10px] text-stone-400 mt-0.5">Tutor: {slot.tutor}</p>
+                  </label>
+                ))}
+
+                <button
+                  onClick={prenotaIncontro}
+                  className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black shadow-md shadow-rose-600/20 active:scale-95 transition"
+                >
+                  ✅ Fissa Appuntamento con Tutor (+150 Gocce)
+                </button>
+              </div>
+            ) : (
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">
+                    Biglietto Digitale Confermato ✓
+                  </span>
+                  <span className="text-xs font-mono font-bold text-emerald-700">
+                    #INVEIN-PV-{Math.floor(1000 + Math.random() * 9000)}
+                  </span>
+                </div>
+                <h4 className="text-xs font-black text-emerald-950">
+                  {slotScelto}
+                </h4>
+                <p className="text-[11px] text-emerald-700 leading-snug">
+                  Tutor assegnato: <strong>Marco V. (5° Anno Medicina)</strong>. Ti aspetta all'ingresso con la spilla rossa IN VEIN.
+                </p>
+                <button
+                  onClick={() => setModaleConvalidaAperta(true)}
+                  className="w-full mt-2 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm"
+                >
+                  💉 Convalida Codice Donazione (+300 Gocce)
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* AREA CHAT STILE WHATSAPP / TELEGRAM */}
+          <div className="bg-stone-50 rounded-3xl border border-stone-200 overflow-hidden shadow-sm flex flex-col h-[420px]">
+            {/* HEADER CHAT */}
+            <div className="bg-white px-4 py-3 border-b border-stone-200 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm">
+                    MV
+                  </div>
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-white" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-stone-900 leading-tight">
+                    Marco V. (Tutor SIMT)
+                  </h4>
+                  <p className="text-[10px] text-emerald-600 font-semibold">
+                    {staScrivendo ? 'sta scrivendo...' : 'Online • 5° Anno Medicina'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 text-stone-400">
+                <span className="text-xs">📞</span>
+                <span className="text-xs">ℹ️</span>
+              </div>
+            </div>
+
+            {/* LISTA MESSAGGI SCROLLABILE */}
+            <div className="flex-1 p-3 overflow-y-auto space-y-2.5 bg-[#EFEAE2]/40">
+              {chatMessaggi.map((m) => {
+                const isUtente = m.mittente === 'utente';
+                return (
+                  <div
+                    key={m.id}
+                    className={`flex flex-col ${isUtente ? 'items-end' : 'items-start'}`}
+                  >
+                    <div
+                      className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                        isUtente
+                          ? 'bg-rose-600 text-white rounded-br-none'
+                          : 'bg-white text-stone-800 border border-stone-200 rounded-bl-none'
+                      }`}
+                    >
+                      <p>{m.testo}</p>
+                      <div
+                        className={`text-[9px] mt-1 text-right flex items-center justify-end space-x-1 ${
+                          isUtente ? 'text-rose-100' : 'text-stone-400'
+                        }`}
+                      >
+                        <span>{m.orario}</span>
+                        {isUtente && <span>✓✓</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {staScrivendo && (
+                <div className="flex items-center space-x-2 bg-white px-3 py-2 rounded-2xl rounded-bl-none border border-stone-200 w-28 shadow-sm">
+                  <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" />
+                  <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                </div>
+              )}
+            </div>
+
+            {/* RISPOSTE RAPIDE SUGGERITE */}
+            <div className="px-3 py-1.5 bg-white border-t border-stone-100 flex items-center space-x-1.5 overflow-x-auto no-scrollbar text-[11px]">
+              <button
+                onClick={() => inviaMessaggio("Ho un po' paura dell'ago...")}
+                className="shrink-0 px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-full font-medium transition"
+              >
+                💉 Paura dell'ago?
+              </button>
+              <button
+                onClick={() => inviaMessaggio("Cosa posso mangiare a colazione?")}
+                className="shrink-0 px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-full font-medium transition"
+              >
+                ☕ Colazione?
+              </button>
+              <button
+                onClick={() => inviaMessaggio("A che ora ci troviamo esattamente?")}
+                className="shrink-0 px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-full font-medium transition"
+              >
+                ⏰ Orario e punto?
+              </button>
+            </div>
+
+            {/* INPUT SCRITTURA MESSAGGIO */}
+            <div className="p-2.5 bg-white border-t border-stone-200 flex items-center space-x-2">
+              <input
+                type="text"
+                value={messaggioTesto}
+                onChange={(e) => setMessaggioTesto(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && inviaMessaggio()}
+                placeholder="Scrivi un messaggio a Marco..."
+                className="flex-1 px-3.5 py-2 bg-stone-100 rounded-2xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500 border border-transparent"
+              />
+              <button
+                onClick={() => inviaMessaggio()}
+                disabled={!messaggioTesto.trim()}
+                className={`w-9 h-9 rounded-2xl flex items-center justify-center text-white transition ${
+                  messaggioTesto.trim()
+                    ? 'bg-rose-600 hover:bg-rose-700'
+                    : 'bg-stone-300 cursor-not-allowed'
+                }`}
+              >
+                ➤
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MODALE COUPON LIVE CON CONTO ALLA ROVESCIA 05:00 REALE
+// ============================================================================
+function ModaleCouponLive({ coupon, onClose }) {
+  const [secondi, setSecondi] = useState(300); // 5 minuti precisi
+
+  useEffect(() => {
+    if (secondi <= 0) return;
+    const timer = setInterval(() => {
+      setSecondi((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [secondi]);
+
+  const minuti = Math.floor(secondi / 60);
+  const sec = secondi % 60;
+  const tempoFormattato = `${String(minuti).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+
+  if (!coupon) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl border border-stone-200 text-center space-y-4 animate-in fade-in zoom-in duration-200">
+        <div className="inline-block px-3 py-1 bg-rose-50 text-rose-700 rounded-full text-xs font-black uppercase tracking-wider">
+          Coupon Digitale Live
+        </div>
+
+        <div>
+          <h3 className="text-base font-black text-stone-900 leading-tight">
+            {coupon.titolo}
+          </h3>
+          <p className="text-xs text-stone-500 mt-1">
+            {coupon.indirizzo}
+          </p>
+        </div>
+
+        {/* TIMER CONTO ALLA ROVESCIA IN TEMPO REALE */}
+        <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+            Tempo Rimanente per Mostrare alla Cassa
+          </p>
+          <div className={`text-3xl font-mono font-black ${secondi < 60 ? 'text-rose-600 animate-pulse' : 'text-stone-900'}`}>
+            ⏱️ {tempoFormattato}
+          </div>
+          <p className="text-[10px] text-stone-500">
+            Valido solo se mostrato attivo dal display
+          </p>
+        </div>
+
+        {/* QR CODE & CODICE UNIVOCO */}
+        <div className="bg-stone-100 p-4 rounded-2xl border border-dashed border-stone-300 flex flex-col items-center justify-center space-y-2">
+          <div className="w-32 h-32 bg-white p-2 rounded-xl shadow-inner flex flex-col items-center justify-center border border-stone-200">
+            <svg viewBox="0 0 100 100" className="w-full h-full text-stone-900 fill-current">
+              <rect x="0" y="0" width="28" height="28" rx="4" />
+              <rect x="4" y="4" width="20" height="20" fill="white" />
+              <rect x="8" y="8" width="12" height="12" />
+              <rect x="72" y="0" width="28" height="28" rx="4" />
+              <rect x="76" y="4" width="20" height="20" fill="white" />
+              <rect x="80" y="8" width="12" height="12" />
+              <rect x="0" y="72" width="28" height="28" rx="4" />
+              <rect x="4" y="76" width="20" height="20" fill="white" />
+              <rect x="8" y="80" width="12" height="12" />
+              <rect x="36" y="8" width="12" height="12" />
+              <rect x="52" y="8" width="12" height="12" />
+              <rect x="36" y="36" width="28" height="28" />
+              <rect x="40" y="40" width="20" height="20" fill="white" />
+              <rect x="44" y="44" width="12" height="12" />
+              <rect x="8" y="36" width="12" height="28" />
+              <rect x="72" y="36" width="20" height="12" />
+              <rect x="72" y="52" width="12" height="20" />
+              <rect x="36" y="72" width="28" height="12" />
+              <rect x="80" y="80" width="12" height="12" />
+            </svg>
+          </div>
+          <span className="font-mono text-xs font-bold text-stone-800 tracking-wider">
+            {coupon.codice}
+          </span>
+        </div>
+
+        <p className="text-[11px] text-stone-500 leading-snug">
+          Mostra questo codice al personale per convalidare lo sconto o ritirare il premio.
+        </p>
+
+        <button
+          onClick={onClose}
+          className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-black shadow-md transition"
+        >
+          Chiudi Coupon
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TAB 4: CLASSIFICHE (DIPARTIMENTI CON TOP 10, TOP ATENEO & PREMI PULITI)
+// ============================================================================
+function SchermataClassifiche({
+  puntiUtente,
+  setPuntiUtente,
+  facolta,
+  mostraNotifica,
+  avatar,
+  couponRiscattati,
+  setCouponRiscattati
+}) {
+  const [sottoScheda, setSottoScheda] = useState('classifica'); // 'classifica' | 'premi'
+  const [vistaClassifica, setVistaClassifica] = useState('dipartimenti'); // 'dipartimenti' | 'ateneo'
+  const [facoltaDettaglio, setFacoltaDettaglio] = useState(null); // null = lista facoltà, string = vista Top 10 di quella facoltà
+  const [couponAttivo, setCouponAttivo] = useState(null);
+
+  // --- SEZIONE 1: I 5 PREMI PULITI PER STUDENTI ---
+  const catalogoPremiPavia = [
+    {
+      id: 1,
+      titolo: '☕ Colazione al Bar San Tommaso (Caffè + Brioche)',
+      costo: 100,
+      indirizzo: 'Bar San Tommaso • Piazza del Lino 1, Pavia',
+      descrizione: 'Un cornetto artigianale caldo e un espresso o cappuccino prima delle lezioni a San Tommaso.'
+    },
+    {
+      id: 2,
+      titolo: '🖨️ Buono Stampe Tesi & Slide (50 pagine)',
+      costo: 200,
+      indirizzo: 'Copisterie Universitarie • Corso Carlo Alberto & Polo Cravino',
+      descrizione: 'Stampa e rilegatura rapida per appunti, slide o prime bozze di tesi di laurea.'
+    },
+    {
+      id: 3,
+      titolo: '🎬 Biglietto Cinema Politeama o Ingresso Piscina CUS Pavia',
+      costo: 300,
+      indirizzo: 'Cinema Politeama (Corso Cavour) o Centro CUS (Via Cravino)',
+      descrizione: 'Un ingresso gratuito a scelta per una serata al cinema o un allenamento in vasca/palestra CUS.'
+    },
+    {
+      id: 4,
+      titolo: '👕 T-Shirt Ufficiale "IN VEIN UniPv" in cotone organico',
+      costo: 450,
+      indirizzo: 'Punto Informativo AVIS • Cortile Centrale dell\'Ateneo',
+      descrizione: 'T-shirt ufficiale serigrafata ad alta densità con il logo della campagna e numero donatore.'
+    },
+    {
+      id: 5,
+      titolo: '🎓 Felpa Ufficiale Università di Pavia (Edizione Donatori)',
+      costo: 1200,
+      indirizzo: 'UniPv Shop Ufficiale • Cortile dei Caduti, Corso Strada Nuova 65',
+      descrizione: 'L\'iconica felpa universitaria di Pavia con stemma dorato ricamato, riservata ai donatori seriali.'
+    }
+  ];
+
+  const riscattaPremio = (premio) => {
+    if (puntiUtente < premio.costo) {
+      mostraNotifica('Gocce insufficienti 💧', `Servono ${premio.costo} Gocce (te ne mancano ${premio.costo - puntiUtente}).`, 0);
+      return;
+    }
+
+    setPuntiUtente((prev) => prev - premio.costo);
+    const codiceGenerato = `UNIPV-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const nuovoCoupon = {
+      ...premio,
+      codice: codiceGenerato,
+      data: new Date().toLocaleDateString('it-IT')
+    };
+
+    setCouponRiscattati((prev) => [...prev, nuovoCoupon]);
+    setCouponAttivo(nuovoCoupon);
+    mostraNotifica('Coupon Riscattato! 🎉', `-${premio.costo} Gocce. Mostra il coupon entro 5 minuti!`, -premio.costo);
+  };
+
+  // --- SEZIONE 2: DATI DIPARTIMENTI PAVIA ---
+  const puntiBonus = Math.max(0, puntiUtente - 330);
+  const dipartimentiPavia = [
+    { nome: 'Psicologia (San Tommaso)', breve: 'Psicologia', punti: 4620 + (facolta === 'Psicologia' ? puntiBonus : 0), donatori: 154, colore: 'bg-rose-600' },
+    { nome: 'Medicina e Chirurgia (San Matteo)', breve: 'Medicina', punti: 4510 + (facolta === 'Medicina' ? puntiBonus : 0), donatori: 147, colore: 'bg-emerald-600' },
+    { nome: 'Ingegneria Industriale (Cravino)', breve: 'Ingegneria', punti: 4280 + (facolta === 'Ingegneria' ? puntiBonus : 0), donatori: 131, colore: 'bg-blue-600' },
+    { nome: 'Economia e Management (San Felice)', breve: 'Economia', punti: 4120 + (facolta === 'Economia' ? puntiBonus : 0), donatori: 122, colore: 'bg-amber-600' },
+    { nome: 'Farmacia e Biologia (Cravino)', breve: 'Farmacia & Bio', punti: 3690 + (facolta === 'Farmacia & Bio' ? puntiBonus : 0), donatori: 104, colore: 'bg-teal-600' },
+    { nome: 'Giurisprudenza (Strada Nuova)', breve: 'Giurisprudenza', punti: 3410 + (facolta === 'Giurisprudenza' ? puntiBonus : 0), donatori: 95, colore: 'bg-purple-600' },
+    { nome: 'Studi Umanistici e Lettere', breve: 'Lettere', punti: 3080 + (facolta === 'Lettere' ? puntiBonus : 0), donatori: 86, colore: 'bg-indigo-600' }
+  ].sort((a, b) => b.punti - a.punti);
+
+  const massimoPunti = Math.max(...dipartimentiPavia.map((d) => d.punti));
+
+  // --- GENERATORE TOP 10 PER FACOLTA SPECIFICA ---
+  const generaTop10Facolta = (nomeFacolta) => {
+    const listaFittizia = [
+      { id: '1', nome: 'Matteo V.', anno: '5° Anno', gocce: 1250, donazioni: 4, avatar: { abito: 'camice', accessorio: 'cerotto' } },
+      { id: '2', nome: 'Chiara L.', anno: '4° Anno', gocce: 1120, donazioni: 3, avatar: { abito: 'felpa_blu', accessorio: 'occhiali' } },
+      { id: '3', nome: 'Lorenzo M.', anno: '3° Anno', gocce: 980, donazioni: 3, avatar: { abito: 'giacca_cus', accessorio: 'cerotto' } },
+      { id: '4', nome: 'Giulia R.', anno: '2° Anno', gocce: 890, donazioni: 2, avatar: { abito: 'felpa_rossa', accessorio: 'tocco' } },
+      { id: '5', nome: 'Federico B.', anno: '3° Anno', gocce: 810, donazioni: 2, avatar: { abito: 'felpa_blu', accessorio: 'nessuno' } },
+      { id: '6', nome: 'Elena S.', anno: '1° Anno', gocce: 740, donazioni: 2, avatar: { abito: 'felpa_rossa', accessorio: 'cerotto' } },
+      { id: '7', nome: 'Marco T.', anno: '4° Anno', gocce: 690, donazioni: 2, avatar: { abito: 'toga', accessorio: 'occhiali' } },
+      { id: '8', nome: 'Sofia P.', anno: '2° Anno', gocce: 640, donazioni: 1, avatar: { abito: 'felpa_blu', accessorio: 'nessuno' } },
+      { id: '9', nome: 'Davide G.', anno: '3° Anno', gocce: 580, donazioni: 1, avatar: { abito: 'felpa_rossa', accessorio: 'cerotto' } },
+      { id: '10', nome: 'Beatrice M.', anno: '1° Anno', gocce: 520, donazioni: 1, avatar: { abito: 'giacca_cus', accessorio: 'nessuno' } }
+    ];
+
+    const decimoPunteggio = 520;
+    const isFacoltaSerena = nomeFacolta.includes(facolta) || facolta.includes(nomeFacolta);
+
+    if (isFacoltaSerena && puntiUtente >= decimoPunteggio) {
+      const serenaObj = {
+        id: 'serena',
+        nome: 'Serena (Tu)',
+        anno: '3° Anno',
+        gocce: puntiUtente,
+        donazioni: 1,
+        isTu: true,
+        avatar: avatar
+      };
+      const uniti = [...listaFittizia, serenaObj].sort((a, b) => b.gocce - a.gocce).slice(0, 10);
+      return { top10: uniti, serenaFuori: null };
+    } else if (isFacoltaSerena) {
+      const serenaFuori = {
+        posizione: 14,
+        nome: 'Serena (Tu)',
+        anno: '3° Anno',
+        gocce: puntiUtente,
+        mancanti: decimoPunteggio - puntiUtente + 10,
+        facolta: nomeFacolta
+      };
+      return { top10: listaFittizia, serenaFuori };
+    } else {
+      return { top10: listaFittizia, serenaFuori: null };
+    }
+  };
+
+  // --- CLASSIFICA TOP ATENEO ---
+  const classificaTopAteneo = () => {
+    const listaAteneo = [
+      { id: 'a1', nome: 'Alessandro V.', facolta: 'Medicina', gocce: 1840, avatar: { abito: 'camice', accessorio: 'alloro' } },
+      { id: 'a2', nome: 'Martina F.', facolta: 'Ingegneria', gocce: 1690, avatar: { abito: 'armatura_volta', accessorio: 'occhiali' } },
+      { id: 'a3', nome: 'Matteo V.', facolta: 'Medicina', gocce: 1450, avatar: { abito: 'felpa_rossa', accessorio: 'cerotto' } },
+      { id: 'a4', nome: 'Chiara L.', facolta: 'Farmacia & Bio', gocce: 1320, avatar: { abito: 'felpa_blu', accessorio: 'occhiali' } },
+      { id: 'a5', nome: 'Lorenzo M.', facolta: 'Ingegneria', gocce: 1190, avatar: { abito: 'giacca_cus', accessorio: 'cerotto' } },
+      { id: 'a6', nome: 'Simone B.', facolta: 'Economia', gocce: 1080, avatar: { abito: 'toga', accessorio: 'tocco' } },
+      { id: 'a7', nome: 'Giulia R.', facolta: 'Psicologia', gocce: 990, avatar: { abito: 'felpa_rossa', accessorio: 'cerotto' } },
+      { id: 'a8', nome: 'Riccardo D.', facolta: 'Giurisprudenza', gocce: 940, avatar: { abito: 'ermellino', accessorio: 'feluca' } },
+      { id: 'a9', nome: 'Camilla P.', facolta: 'Lettere', gocce: 890, avatar: { abito: 'mantello_vampiro', accessorio: 'nessuno' } },
+      { id: 'a10', nome: 'Federico B.', facolta: 'Ingegneria', gocce: 840, avatar: { abito: 'felpa_blu', accessorio: 'nessuno' } }
+    ];
+
+    const decimoAteneo = 840;
+
+    if (puntiUtente >= decimoAteneo) {
+      const serenaAteneo = {
+        id: 'serena',
+        nome: 'Serena (Tu)',
+        facolta: facolta,
+        gocce: puntiUtente,
+        isTu: true,
+        avatar: avatar
+      };
+      const uniti = [...listaAteneo, serenaAteneo].sort((a, b) => b.gocce - a.gocce).slice(0, 10);
+      return { top10: uniti, serenaFuori: null };
+    } else {
+      const serenaFuori = {
+        posizione: 28,
+        nome: 'Serena (Tu)',
+        facolta: facolta,
+        gocce: puntiUtente,
+        mancanti: decimoAteneo - puntiUtente + 10
+      };
+      return { top10: listaAteneo, serenaFuori };
+    }
+  };
+
+  const datiAteneo = classificaTopAteneo();
+
+  return (
+    <div className="space-y-4">
+      {/* SOTTOSCHEDE: 1. CLASSIFICHE vs 2. CATALOGO PREMI */}
+      <div className="flex bg-stone-100 p-1 rounded-2xl border border-stone-200">
+        <button
+          onClick={() => { setSottoScheda('classifica'); setFacoltaDettaglio(null); }}
+          className={`flex-1 py-2 text-xs font-black rounded-xl transition ${
+            sottoScheda === 'classifica'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
+          }`}
+        >
+          🏆 Classifiche UniPv
+        </button>
+        <button
+          onClick={() => setSottoScheda('premi')}
+          className={`flex-1 py-2 text-xs font-black rounded-xl transition ${
+            sottoScheda === 'premi'
+              ? 'bg-white text-stone-900 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
+          }`}
+        >
+          🎁 Premi Studente ({puntiUtente} 💧)
+        </button>
+      </div>
+
+      {/* SCHERMATA CLASSIFICHE */}
+      {sottoScheda === 'classifica' && (
+        <div className="space-y-4">
+          {/* SELETTORE VISTA: DIPARTIMENTI vs TOP ATENEO */}
+          {!facoltaDettaglio && (
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setVistaClassifica('dipartimenti')}
+                className={`flex-1 py-2 rounded-2xl text-xs font-bold transition border ${
+                  vistaClassifica === 'dipartimenti'
+                    ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                🏛️ Dipartimenti ({dipartimentiPavia.length})
+              </button>
+              <button
+                onClick={() => setVistaClassifica('ateneo')}
+                className={`flex-1 py-2 rounded-2xl text-xs font-bold transition border ${
+                  vistaClassifica === 'ateneo'
+                    ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                👤 Top 10 Studenti Ateneo
+              </button>
+            </div>
+          )}
+
+          {/* VISTA 1: DIPARTIMENTI (LISTA DELLE 7 FACOLTÀ) */}
+          {vistaClassifica === 'dipartimenti' && !facoltaDettaglio && (
+            <div className="space-y-3">
+              <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-stone-900">
+                    Coppa dei Dipartimenti 2026
+                  </h3>
+                  <span className="text-[10px] font-bold text-stone-500">
+                    Pavia Nudgeathon
+                  </span>
+                </div>
+                <p className="text-xs text-stone-600 leading-snug">
+                  Ogni donazione e quiz porta punti al tuo corso. Clicca su un dipartimento per scoprire i suoi Top 10 studenti!
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                {dipartimentiPavia.map((d, index) => {
+                  const isMiaFacolta = d.breve === facolta;
+                  const perc = Math.round((d.punti / massimoPunti) * 100);
+
+                  return (
+                    <div
+                      key={d.breve}
+                      onClick={() => setFacoltaDettaglio(d.nome)}
+                      className={`p-4 rounded-3xl border transition cursor-pointer hover:shadow-md ${
+                        isMiaFacolta
+                          ? 'bg-rose-50/60 border-rose-300 ring-2 ring-rose-500/20'
+                          : 'bg-white border-stone-200/90 hover:border-stone-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs ${
+                              index === 0
+                                ? 'bg-amber-100 text-amber-800'
+                                : index === 1
+                                ? 'bg-stone-200 text-stone-700'
+                                : index === 2
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-stone-100 text-stone-500'
+                            }`}
+                          >
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                          </span>
+                          <div>
+                            <div className="flex items-center space-x-1.5">
+                              <h4 className="text-xs font-black text-stone-900">
+                                {d.nome}
+                              </h4>
+                              {isMiaFacolta && (
+                                <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black uppercase">
+                                  Tu
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-stone-500 font-medium">
+                              {d.donatori} donatori attivi
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-xs font-black text-stone-900">
+                            {d.punti.toLocaleString()} 💧
+                          </span>
+                          <span className="block text-[10px] text-rose-600 font-bold hover:underline">
+                            Vedi Top 10 →
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="h-1.5 w-full bg-stone-100 rounded-full mt-3 overflow-hidden">
+                        <div
+                          className={`h-full ${d.colore} rounded-full transition-all duration-500`}
+                          style={{ width: `${perc}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* VISTA DETTAGLIO FACOLTÀ: TOP 10 + SERENA FISSA SE FUORI */}
+          {vistaClassifica === 'dipartimenti' && facoltaDettaglio && (
+            <div className="space-y-3">
+              <button
+                onClick={() => setFacoltaDettaglio(null)}
+                className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold transition flex items-center space-x-1"
+              >
+                <span>← Torna a tutte le Facoltà</span>
+              </button>
+
+              <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-1">
+                <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-lg text-[10px] font-black uppercase">
+                  Classifica Dipartimentale
+                </span>
+                <h3 className="text-base font-black text-stone-900">
+                  {facoltaDettaglio}
+                </h3>
+                <p className="text-xs text-stone-500">
+                  Top 10 Studenti per Gocce raccolte e donazioni effettuate
+                </p>
+              </div>
+
+              {/* LISTA DEI TOP 10 */}
+              {(() => {
+                const { top10, serenaFuori } = generaTop10Facolta(facoltaDettaglio);
+
+                return (
+                  <div className="space-y-2">
+                    {top10.map((st, idx) => {
+                      const pos = idx + 1;
+                      const isTu = st.isTu;
+
+                      return (
+                        <div
+                          key={st.id}
+                          className={`p-3.5 rounded-2xl border flex items-center justify-between transition ${
+                            isTu
+                              ? 'bg-rose-50/70 border-rose-300 ring-2 ring-rose-500/20'
+                              : 'bg-white border-stone-200'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span
+                              className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs ${
+                                pos === 1
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : pos === 2
+                                  ? 'bg-stone-200 text-stone-700'
+                                  : pos === 3
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-stone-100 text-stone-500'
+                              }`}
+                            >
+                              {pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`}
+                            </span>
+                            <CustomAvatar config={st.avatar} size="xs" />
+                            <div>
+                              <div className="flex items-center space-x-1.5">
+                                <h4 className="text-xs font-black text-stone-900">
+                                  {st.nome}
+                                </h4>
+                                {isTu && (
+                                  <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black uppercase">
+                                    Tu
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-stone-500">
+                                {st.anno} • {st.donazioni} {st.donazioni === 1 ? 'donazione' : 'donazioni'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="text-xs font-black text-stone-900">
+                              {st.gocce} 💧
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* RIGA FISSA SERENA FUORI TOP 10 */}
+                    {serenaFuori && (
+                      <div className="pt-2 space-y-2">
+                        <div className="text-center text-stone-400 font-black tracking-widest text-xs">
+                          ••••••
+                        </div>
+                        <div className="p-4 rounded-2xl bg-stone-900 text-white border border-stone-800 shadow-md flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <span className="w-6 h-6 rounded-lg bg-stone-800 text-amber-400 flex items-center justify-center font-black text-xs">
+                              #{serenaFuori.posizione}
+                            </span>
+                            <div>
+                              <div className="flex items-center space-x-1.5">
+                                <h4 className="text-xs font-black text-white">
+                                  Serena (Tu)
+                                </h4>
+                                <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black uppercase">
+                                  Tu
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-stone-300">
+                                Ti mancano <strong className="text-amber-400">{serenaFuori.mancanti} Gocce</strong> per entrare nella Top 10!
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs font-black text-amber-400">
+                            {serenaFuori.gocce} 💧
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* VISTA 2: TOP ATENEO */}
+          {vistaClassifica === 'ateneo' && (
+            <div className="space-y-3">
+              <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-1">
+                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-lg text-[10px] font-black uppercase">
+                  Classifica Generale UniPv
+                </span>
+                <h3 className="text-base font-black text-stone-900">
+                  Top 10 Studenti di Pavia
+                </h3>
+                <p className="text-xs text-stone-500">
+                  I migliori donatori e divulgatori dell'intero Ateneo
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {datiAteneo.top10.map((st, idx) => {
+                  const pos = idx + 1;
+                  const isTu = st.isTu;
+
+                  return (
+                    <div
+                      key={st.id}
+                      className={`p-3.5 rounded-2xl border flex items-center justify-between transition ${
+                        isTu
+                          ? 'bg-rose-50/70 border-rose-300 ring-2 ring-rose-500/20'
+                          : 'bg-white border-stone-200'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs ${
+                            pos === 1
+                              ? 'bg-amber-100 text-amber-800'
+                              : pos === 2
+                              ? 'bg-stone-200 text-stone-700'
+                              : pos === 3
+                              ? 'bg-amber-50 text-amber-700'
+                              : 'bg-stone-100 text-stone-500'
+                          }`}
+                        >
+                          {pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`}
+                        </span>
+                        <CustomAvatar config={st.avatar} size="xs" />
+                        <div>
+                          <div className="flex items-center space-x-1.5">
+                            <h4 className="text-xs font-black text-stone-900">
+                              {st.nome}
+                            </h4>
+                            {isTu && (
+                              <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black uppercase">
+                                Tu
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-stone-500">
+                            {st.facolta}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-xs font-black text-stone-900">
+                          {st.gocce} 💧
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* RIGA FISSA SERENA FUORI TOP 10 ATENEO */}
+                {datiAteneo.serenaFuori && (
+                  <div className="pt-2 space-y-2">
+                    <div className="text-center text-stone-400 font-black tracking-widest text-xs">
+                      ••••••
+                    </div>
+                    <div className="p-4 rounded-2xl bg-stone-900 text-white border border-stone-800 shadow-md flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="w-6 h-6 rounded-lg bg-stone-800 text-amber-400 flex items-center justify-center font-black text-xs">
+                          #{datiAteneo.serenaFuori.posizione}
+                        </span>
+                        <div>
+                          <div className="flex items-center space-x-1.5">
+                            <h4 className="text-xs font-black text-white">
+                              Serena (Tu)
+                            </h4>
+                            <span className="px-1.5 py-0.5 bg-rose-600 text-white rounded text-[9px] font-black uppercase">
+                              Tu
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-stone-300">
+                            Ti mancano <strong className="text-amber-400">{datiAteneo.serenaFuori.mancanti} Gocce</strong> per entrare nella Top 10 di Ateneo!
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-amber-400">
+                        {datiAteneo.serenaFuori.gocce} 💧
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SCHERMATA PREMI STUDENTE PULITI */}
+      {sottoScheda === 'premi' && (
+        <div className="space-y-3">
+          <div className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-stone-900">
+                Catalogo Premi Studente
+              </h3>
+              <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-full text-xs font-black">
+                {puntiUtente} Gocce disponibili
+              </span>
+            </div>
+            <p className="text-xs text-stone-600 leading-snug">
+              Converti le Gocce accumulate con quiz, idratazione e donazioni in buoni e gadget per la tua vita universitaria a Pavia.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {catalogoPremiPavia.map((premio) => {
+              const puoRiscattare = puntiUtente >= premio.costo;
+
+              return (
+                <div
+                  key={premio.id}
+                  className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-sm space-y-3"
+                >
+                  <div className="flex items-start justify-between space-x-2">
+                    <div>
+                      <h4 className="text-sm font-black text-stone-900 leading-snug">
+                        {premio.titolo}
+                      </h4>
+                      <p className="text-[11px] text-stone-500 font-medium mt-0.5">
+                        📍 {premio.indirizzo}
+                      </p>
+                    </div>
+                    <span className="px-2.5 py-1 bg-stone-100 rounded-xl text-xs font-black text-stone-900 shrink-0">
+                      {premio.costo} 💧
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    {premio.descrizione}
+                  </p>
+
+                  <button
+                    onClick={() => riscattaPremio(premio)}
+                    disabled={!puoRiscattare}
+                    className={`w-full py-2.5 rounded-2xl text-xs font-black transition ${
+                      puoRiscattare
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/20 active:scale-95'
+                        : 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {puoRiscattare
+                      ? `🎁 Riscatta Coupon Live (${premio.costo} Gocce)`
+                      : `Mancano ${premio.costo - puntiUtente} Gocce`}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* MODALE DEL COUPON LIVE SE APERTO */}
+      {couponAttivo && (
+        <ModaleCouponLive
+          coupon={couponAttivo}
+          onClose={() => setCouponAttivo(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MODALE CONVALIDA CLINICA (SIMT SAN MATTEO PAVIA)
+// ============================================================================
+function ModaleConvalidaClinica({
+  onClose,
+  onConvalida,
+  nome,
+  facolta
+}) {
+  const [codice, setCodice] = useState('');
+  const [errore, setErrore] = useState('');
+
+  const confermaCodice = () => {
+    if (!codice.trim()) {
+      setErrore('Inserisci il codice ricevuto dal personale sanitario');
+      return;
+    }
+    onConvalida();
+    onClose();
+  };
+
+  const simulaConvalida = () => {
+    setCodice('SIMT-PV-8821');
+    setTimeout(() => {
+      onConvalida();
+      onClose();
+    }, 400);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl border border-stone-200 text-center space-y-4 animate-in fade-in zoom-in duration-200">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-xl font-bold">
+          💉
+        </div>
+
+        <div>
+          <h3 className="text-base font-black text-stone-900">
+            Convalida Donazione SIMT
+          </h3>
+          <p className="text-xs text-stone-500 mt-1">
+            Centro Trasfusionale • Policlinico San Matteo Pavia
+          </p>
+        </div>
+
+        <p className="text-xs text-stone-600 leading-relaxed">
+          Inserisci il codice numerico a 6 cifre rilasciato dal medico dopo il prelievo per accreditare <strong>+300 Gocce</strong> a Serena e a <strong>{facolta}</strong>!
+        </p>
+
+        <div className="space-y-1">
+          <input
+            type="text"
+            placeholder="Es. SIMT-PV-8821"
+            value={codice}
+            onChange={(e) => { setCodice(e.target.value); setErrore(''); }}
+            className="w-full text-center tracking-widest font-mono text-sm py-3 px-4 bg-stone-50 border border-stone-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+          />
+          {errore && <p className="text-[11px] text-rose-600 font-bold">{errore}</p>}
+        </div>
+
+        <div className="space-y-2 pt-1">
+          <button
+            onClick={confermaCodice}
+            className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black shadow-md shadow-rose-600/20 active:scale-95 transition"
+          >
+            Conferma Donazione Effettuata
+          </button>
+
+          <button
+            onClick={simulaConvalida}
+            className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-1"
+          >
+            <span>⚡ Simula Convalida Medica Rapida (Demo)</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="w-full py-2 text-stone-400 hover:text-stone-600 text-xs font-bold transition"
+          >
+            Annulla
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MODALE PERSONALIZZA AVATAR (MEGA SHOP UNIVERSITARIO PAVIA)
+// ============================================================================
+function ModalePersonalizzaAvatar({
+  avatar,
+  setAvatar,
+  vestiSbloccate,
+  setVestiSbloccate,
+  accessoriSbloccati,
+  setAccessoriSbloccati,
+  gocceTotali,
+  setGocceTotali,
+  profilo,
+  setProfilo,
+  onClose,
+  mostraNotifica
+}) {
+  const [tabSelezionato, setTabSelezionato] = useState('abito'); // 'abito' | 'accessorio' | 'aspetto'
+
+  // LE 8 VESTI UNIVERSITARIE (0 fino a 3.000 Gocce)
+  const catalogoVesti = [
+    { id: 'felpa_rossa', nome: 'Felpa Rossa Pavia', costo: 0, tag: 'Base' },
+    { id: 'felpa_blu', nome: 'Felpa Blu Notte', costo: 50, tag: 'Comune' },
+    { id: 'camice', nome: 'Camice con Stetoscopio', costo: 150, tag: 'SIMT' },
+    { id: 'giacca_cus', nome: 'Giacca Sportiva CUS Pavia', costo: 300, tag: 'Sport' },
+    { id: 'toga', nome: 'Toga Tradizionale da Laurea', costo: 600, tag: 'Accademico' },
+    { id: 'mantello_vampiro', nome: 'Mantello Nobile del Donatore', costo: 1000, tag: 'Epico' },
+    { id: 'ermellino', nome: 'Toga Ermellino del Rettore', costo: 1800, tag: 'Leggendario' },
+    { id: 'armatura_volta', nome: 'Armatura Elettrica di Volta', costo: 3000, tag: 'Mitico' }
+  ];
+
+  // GLI 8 ACCESSORI RARI (0 fino a 3.000 Gocce)
+  const catalogoAccessori = [
+    { id: 'nessuno', nome: 'Nessun Accessorio', costo: 0, tag: 'Base' },
+    { id: 'cerotto', nome: 'Cerotto Post-Prelievo', costo: 0, tag: 'Donatore' },
+    { id: 'occhiali', nome: 'Occhiali da Ricercatore', costo: 80, tag: 'Comune' },
+    { id: 'tocco', nome: 'Tocco Accademico con Nappa', costo: 250, tag: 'Laurea' },
+    { id: 'alloro', nome: 'Corona d\'Alloro con Bacche', costo: 500, tag: 'Trionfo' },
+    { id: 'feluca', nome: 'Feluca Goliardica Pavese', costo: 900, tag: 'Goliardia' },
+    { id: 'aura_fuoco', nome: 'Aura Radiosa del Donatore', costo: 1500, tag: 'Epico' },
+    { id: 'corona_alboino', nome: 'Corona d\'Oro di Re Alboino', costo: 3000, tag: 'Sovrano' }
+  ];
+
+  const carnagioni = [
+    { id: 'chiara', label: 'Chiara', color: '#FDE68A' },
+    { id: 'media', label: 'Media', color: '#F59E0B' },
+    { id: 'calda', label: 'Calda', color: '#D97706' },
+    { id: 'rosata', label: 'Rosata', color: '#FECDD3' }
+  ];
+
+  const pettinature = [
+    { id: 'raccolti', label: 'Raccolti / Coda' },
+    { id: 'sciolti', label: 'Lunghi Sciolti' },
+    { id: 'corti', label: 'Corti Pratici' },
+    { id: 'ricci', label: 'Voluminosi Ricci' }
+  ];
+
+  const facoltaList = [
+    'Psicologia',
+    'Medicina',
+    'Ingegneria',
+    'Economia',
+    'Farmacia & Bio',
+    'Giurisprudenza',
+    'Lettere'
+  ];
+
+  // Gestione acquisto o equipaggiamento vestito
+  const selezionaAbito = (item) => {
+    if (vestiSbloccate.includes(item.id)) {
+      setAvatar((prev) => ({ ...prev, abito: item.id, felpa: item.id }));
+      mostraNotifica('Abito Equipaggiato! ✨', item.nome, 0);
+    } else {
+      if (gocceTotali >= item.costo) {
+        setGocceTotali((prev) => prev - item.costo);
+        setVestiSbloccate((prev) => [...prev, item.id]);
+        setAvatar((prev) => ({ ...prev, abito: item.id, felpa: item.id }));
+        mostraNotifica('Abito Acquistato! 🎉', `${item.nome} (-${item.costo} Gocce)`, -item.costo);
+      } else {
+        mostraNotifica('Gocce insufficienti 💧', `Servono ${item.costo} Gocce (te ne mancano ${item.costo - gocceTotali}).`, 0);
+      }
+    }
+  };
+
+  // Gestione acquisto o equipaggiamento accessorio
+  const selezionaAccessorio = (item) => {
+    if (accessoriSbloccati.includes(item.id)) {
+      setAvatar((prev) => ({ ...prev, accessorio: item.id }));
+      mostraNotifica('Accessorio Equipaggiato! ✨', item.nome, 0);
+    } else {
+      if (gocceTotali >= item.costo) {
+        setGocceTotali((prev) => prev - item.costo);
+        setAccessoriSbloccati((prev) => [...prev, item.id]);
+        setAvatar((prev) => ({ ...prev, accessorio: item.id }));
+        mostraNotifica('Accessorio Sbloccato! 🎉', `${item.nome} (-${item.costo} Gocce)`, -item.costo);
+      } else {
+        mostraNotifica('Gocce insufficienti 💧', `Servono ${item.costo} Gocce (te ne mancano ${item.costo - gocceTotali}).`, 0);
+      }
+    }
+  };
+
+  // Pulsante Demo per la commissione (+1.000 Gocce)
+  const aggiungi1000GocceDemo = () => {
+    setGocceTotali((prev) => prev + 1000);
+    mostraNotifica('🧪 +1.000 Gocce Aggiunte!', 'Modalità test per provare tutti i costumi leggendari!', 1000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-5 shadow-2xl border border-stone-200 space-y-4 max-h-[92vh] flex flex-col">
+        {/* HEADER MODALE */}
+        <div className="flex items-center justify-between shrink-0">
+          <div>
+            <h3 className="text-base font-black text-stone-900">
+              Mega Shop Avatar UniPv
+            </h3>
+            <p className="text-[11px] text-stone-500">
+              Personalizza lo stile di Serena con le Gocce
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center font-bold text-sm transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* ANTEPRIMA AVATAR IN TEMPO REALE */}
+        <div className="bg-stone-50 rounded-3xl p-4 border border-stone-200/80 flex items-center justify-center space-x-4 shrink-0">
+          <div className="relative">
+            <CustomAvatar config={avatar} size="lg" felice={true} />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center space-x-1.5">
+              <h4 className="text-sm font-black text-stone-900">
+                {profilo.nome}, {profilo.eta}
+              </h4>
+              <span className="px-2 py-0.5 bg-rose-50 text-rose-700 rounded-full text-[10px] font-black">
+                {gocceTotali} 💧
+              </span>
+            </div>
+            <p className="text-[11px] text-stone-500 font-medium">
+              {profilo.facolta} • {profilo.annoCorso}
+            </p>
+          </div>
+        </div>
+
+        {/* SELETTORE SCHEDE SHOP */}
+        <div className="flex bg-stone-100 p-1 rounded-2xl border border-stone-200 shrink-0 text-xs font-bold">
+          <button
+            onClick={() => setTabSelezionato('abito')}
+            className={`flex-1 py-1.5 rounded-xl transition ${
+              tabSelezionato === 'abito' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
+            }`}
+          >
+            👘 Vesti ({catalogoVesti.length})
+          </button>
+          <button
+            onClick={() => setTabSelezionato('accessorio')}
+            className={`flex-1 py-1.5 rounded-xl transition ${
+              tabSelezionato === 'accessorio' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
+            }`}
+          >
+            👑 Accessori ({catalogoAccessori.length})
+          </button>
+          <button
+            onClick={() => setTabSelezionato('aspetto')}
+            className={`flex-1 py-1.5 rounded-xl transition ${
+              tabSelezionato === 'aspetto' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
+            }`}
+          >
+            🎨 Tratti & Corso
+          </button>
+        </div>
+
+        {/* CONTENUTO SCROLLABILE SHOP */}
+        <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+          {/* TAB 1: LE 8 VESTI */}
+          {tabSelezionato === 'abito' && (
+            <div className="space-y-2">
+              {catalogoVesti.map((item) => {
+                const sbloccato = vestiSbloccate.includes(item.id);
+                const equipaggiato = (avatar.abito || avatar.felpa) === item.id;
+                const puoComprare = gocceTotali >= item.costo;
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => selezionaAbito(item)}
+                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
+                      equipaggiato
+                        ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-500/20 shadow-sm'
+                        : 'bg-white border-stone-200 hover:border-stone-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <CustomAvatar
+                        config={{ ...avatar, abito: item.id, felpa: item.id }}
+                        size="xs"
+                      />
+                      <div>
+                        <div className="flex items-center space-x-1.5">
+                          <h5 className="font-bold text-stone-900">{item.nome}</h5>
+                          <span className="px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded text-[9px] font-semibold">
+                            {item.tag}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-stone-400">
+                          {sbloccato ? 'Sbloccato nel guardaroba' : `Richiede ${item.costo} Gocce`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      {equipaggiato ? (
+                        <span className="px-2.5 py-1 bg-rose-600 text-white rounded-xl text-[10px] font-black">
+                          In uso ✓
+                        </span>
+                      ) : sbloccato ? (
+                        <span className="px-2.5 py-1 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-xl text-[10px] font-bold">
+                          Indossa
+                        </span>
+                      ) : (
+                        <span
+                          className={`px-2.5 py-1 rounded-xl text-[10px] font-black ${
+                            puoComprare
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-stone-100 text-stone-400'
+                          }`}
+                        >
+                          {item.costo} 💧
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* TAB 2: GLI 8 ACCESSORI */}
+          {tabSelezionato === 'accessorio' && (
+            <div className="space-y-2">
+              {catalogoAccessori.map((item) => {
+                const sbloccato = accessoriSbloccati.includes(item.id);
+                const equipaggiato = avatar.accessorio === item.id;
+                const puoComprare = gocceTotali >= item.costo;
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => selezionaAccessorio(item)}
+                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
+                      equipaggiato
+                        ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-500/20 shadow-sm'
+                        : 'bg-white border-stone-200 hover:border-stone-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <CustomAvatar
+                        config={{ ...avatar, accessorio: item.id }}
+                        size="xs"
+                      />
+                      <div>
+                        <div className="flex items-center space-x-1.5">
+                          <h5 className="font-bold text-stone-900">{item.nome}</h5>
+                          <span className="px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded text-[9px] font-semibold">
+                            {item.tag}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-stone-400">
+                          {sbloccato ? 'Sbloccato' : `Richiede ${item.costo} Gocce`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      {equipaggiato ? (
+                        <span className="px-2.5 py-1 bg-rose-600 text-white rounded-xl text-[10px] font-black">
+                          In uso ✓
+                        </span>
+                      ) : sbloccato ? (
+                        <span className="px-2.5 py-1 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-xl text-[10px] font-bold">
+                          Equipaggia
+                        </span>
+                      ) : (
+                        <span
+                          className={`px-2.5 py-1 rounded-xl text-[10px] font-black ${
+                            puoComprare
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-stone-100 text-stone-400'
+                          }`}
+                        >
+                          {item.costo} 💧
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* TAB 3: TRATTI SOMATICI & SELETTORE CORSO ESSE3 */}
+          {tabSelezionato === 'aspetto' && (
+            <div className="space-y-4">
+              {/* SELETTORE FACOLTÀ RAPIDO */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-stone-700">
+                  Dipartimento Universitario UniPv:
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {facoltaList.map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => {
+                        setProfilo((prev) => ({ ...prev, facolta: f }));
+                        mostraNotifica('Dipartimento Aggiornato', `I tuoi punti ora concorrono per ${f}!`, 0);
+                      }}
+                      className={`p-2 rounded-xl text-left font-bold transition border ${
+                        profilo.facolta === f
+                          ? 'bg-rose-50 border-rose-500 text-rose-700'
+                          : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARNAGIONE */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-stone-700">
+                  Tonalità Carnagione:
+                </label>
+                <div className="flex space-x-2">
+                  {carnagioni.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setAvatar((prev) => ({ ...prev, carnagione: c.id }))}
+                      className={`flex-1 py-2 px-1 rounded-xl border flex flex-col items-center space-y-1 transition ${
+                        avatar.carnagione === c.id
+                          ? 'border-rose-500 bg-rose-50 ring-2 ring-rose-500/20'
+                          : 'border-stone-200 bg-stone-50'
+                      }`}
+                    >
+                      <span className="w-5 h-5 rounded-full border border-stone-300" style={{ backgroundColor: c.color }} />
+                      <span className="text-[10px] font-bold text-stone-700">{c.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* CAPELLI */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-stone-700">
+                  Taglio / Pettinatura:
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {pettinature.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setAvatar((prev) => ({ ...prev, capelli: p.id }))}
+                      className={`p-2 rounded-xl text-left font-bold transition border ${
+                        avatar.capelli === p.id
+                          ? 'bg-rose-50 border-rose-500 text-rose-700'
+                          : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* FOOTER: PULSANTE TEST DEMO + CHIUDI */}
+        <div className="space-y-2 pt-2 border-t border-stone-200 shrink-0">
+          <button
+            onClick={aggiungi1000GocceDemo}
+            className="w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-2xl text-xs font-black transition flex items-center justify-center space-x-1.5"
+          >
+            <span>🧪 +1.000 Gocce (Test Demo Giuria)</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-black shadow-md transition"
+          >
+            Salva & Chiudi Personalizzazione
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// PULSANTE NAV INFERIORE (BOTTOM BAR)
+// ============================================================================
+function PulsanteNav({ icona, etichetta, badge, attivo, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition duration-150 ${
+        attivo
+          ? 'text-rose-600 scale-105'
+          : 'text-stone-400 hover:text-stone-600'
+      }`}
+    >
+      <span className="text-xl leading-none">{icona}</span>
+      <span className={`text-[10px] font-black mt-1 ${attivo ? 'text-rose-600 font-extrabold' : 'text-stone-500 font-medium'}`}>
+        {etichetta}
+      </span>
+      {badge && (
+        <span className="absolute top-0 right-2 w-4 h-4 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ============================================================================
+// COMPONENTE PRINCIPALE: IN VEIN PAVIA (UNIPV NUDGEATHON 2026)
+// ============================================================================
+function App() {
+  const [schedaAttiva, setSchedaAttiva] = useState('home'); // 'home' | 'missioni' | 'compagno' | 'classifiche'
+  const [gocceTotali, setGocceTotali] = useState(330);
+  const [giorniSerie, setGiorniSerie] = useState(5);
+  const [scudoEsamiAttivo, setScudoEsamiAttivo] = useState(false); // Toggle libero Scudo Ghiaccio!
+  const [idratazioneOggi, setIdratazioneOggi] = useState(false);
+
+  // Barra Progressiva Fisiologica
+  const [giorniTrascorsi, setGiorniTrascorsi] = useState(18);
+  const [tipoDonatrice, setTipoDonatrice] = useState('donna_120');
+
+  // Stato Donazione & Percorso Clinico
+  const [donazioneConvalidata, setDonazioneConvalidata] = useState(false);
+  const [idoneitaVerificata, setIdoneitaVerificata] = useState(false);
+  const [compagnoPrenotato, setCompagnoPrenotato] = useState(false);
+
+  // Modali
+  const [modaleVerificaAperta, setModaleVerificaAperta] = useState(false);
+  const [modaleAvatarAperta, setModaleAvatarAperta] = useState(false);
+  const [modaleConvalidaAperta, setModaleConvalidaAperta] = useState(false);
+
+  // Stato Quiz Giornalieri (3 set)
+  const [giornataQuiz, setGiornataQuiz] = useState(1);
+  const [risposteQuiz, setRisposteQuiz] = useState({});
+  const [bauleGiornoRiscattato, setBauleGiornoRiscattato] = useState({});
+  const [scossaInviata, setScossaInviata] = useState(false);
+  const [couponRiscattati, setCouponRiscattati] = useState([]);
+
+  // Notifiche Toast
+  const [notifica, setNotifica] = useState({ visibile: false, titolo: '', messaggio: '', punti: 0 });
+
+  // Profilo Utente Serena
+  const [profilo, setProfilo] = useState({
+    nome: 'Serena',
+    eta: 21,
+    facolta: 'Psicologia',
+    annoCorso: '3° Anno',
+    email: 'serena.rossi01@universitadipavia.it',
+    ruoloUtente: 'neo',
+    gruppoSanguigno: null
+  });
+
+  // Avatar Serena
+  const [avatar, setAvatar] = useState({
+    abito: 'felpa_rossa',
+    felpa: 'felpa_rossa',
+    carnagione: 'chiara',
+    capelli: 'raccolti',
+    accessorio: 'cerotto'
+  });
+
+  // Oggetti Sbloccati
+  const [vestiSbloccate, setVestiSbloccate] = useState(['felpa_rossa']);
+  const [accessoriSbloccati, setAccessoriSbloccati] = useState(['nessuno', 'cerotto']);
+
+  // Chat Tutor Iniziale
+  const [chatMessaggi, setChatMessaggi] = useState([
+    {
+      id: 1,
+      mittente: 'tutor',
+      testo: 'Ciao Serena! Piacere, sono Marco di Medicina (5° anno). Ti accompagnerò io alla donazione in emoteca per qualsiasi dubbio o per farti coraggio!',
+      orario: '09:45',
+      spunte: true
+    }
+  ]);
+
+  // Utility Aggiungi Gocce
+  const aggiungiGocce = (quantita) => {
+    setGocceTotali((prev) => Math.max(0, prev + quantita));
+  };
+
+  // Toast Notifica Helper
+  const mostraNotifica = (titolo, messaggio, punti = 0) => {
+    setNotifica({ visibile: true, titolo, messaggio, punti });
+    setTimeout(() => {
+      setNotifica((prev) => ({ ...prev, visibile: false }));
+    }, 3200);
+  };
+
+  // TOGGLE LIBERO SCUDO GHIACCIO (ATTIVA / DISATTIVA CON RIMBORSO)
+  const toggleScudoEsami = () => {
+    if (!scudoEsamiAttivo) {
+      if (gocceTotali >= 50) {
+        setGocceTotali((prev) => prev - 50);
+        setScudoEsamiAttivo(true);
+        mostraNotifica('❄️ Scudo Serie Attivato (-50 Gocce)', 'La tua serie è protetta se salti un giorno.', -50);
+      } else {
+        mostraNotifica('⚠️ Gocce insufficienti', 'Servono almeno 50 Gocce per attivare lo Scudo!', 0);
+      }
+    } else {
+      setScudoEsamiAttivo(false);
+      setGocceTotali((prev) => prev + 50);
+      mostraNotifica('Scudo Disattivato (+50 Gocce rimborsate)', 'Le 50 Gocce sono tornate disponibili.', 50);
+    }
+  };
+
+  // Convalida Donazione Finale SIMT
+  const eseguiConvalidaDonazione = () => {
+    setDonazioneConvalidata(true);
+    aggiungiGocce(300);
+    setProfilo((prev) => ({ ...prev, gruppoSanguigno: '0+' }));
+    mostraNotifica('Donazione Convalidata! 🩸', '+300 Gocce! Hai scoperto il tuo gruppo sanguigno: 0+.', 300);
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-900 sm:py-6 flex items-center justify-center font-sans antialiased text-stone-900 select-none">
+      {/* FRAME SMARTPHONE RIGIDO: FIX DEFINITIVO SCROLL BOTTOM NAV */}
+      <div className="w-full max-w-md bg-[#FDFBF7] flex flex-col relative shadow-2xl sm:rounded-[2.8rem] sm:border-[9px] sm:border-stone-800 h-[100dvh] sm:h-[840px] overflow-hidden">
+
+        {/* 1. HEADER IN ALTO (SHRINK-0 Z-30) */}
+        <header className="bg-white/90 backdrop-blur-md border-b border-stone-200/80 px-4 py-2.5 shrink-0 z-30 flex items-center justify-between">
+          {/* LOGO & TITOLO */}
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-rose-500 flex items-center justify-center shadow-md shadow-rose-600/30 text-white">
+              <Droplets className="w-4 h-4 fill-white" />
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="text-sm font-black tracking-tight text-stone-900">
+                IN VEIN
+              </span>
+              <button
+                onClick={() => setModaleVerificaAperta(true)}
+                className="px-1.5 py-0.5 bg-stone-100 hover:bg-stone-200 rounded text-[9px] font-black text-stone-700 tracking-wider transition uppercase"
+              >
+                PAVIA
+              </button>
+            </div>
+          </div>
+
+          {/* 3 PILLOLE COMPATTE SU UNA SOLA RIGA: SCUDO TOGGLE, SERIE, GOCCE */}
+          <div className="flex items-center space-x-1.5">
+            {/* TOGGLE SCUDO GHIACCIO */}
+            <button
+              onClick={toggleScudoEsami}
+              className={`px-2.5 py-1 rounded-full text-xs font-black transition flex items-center space-x-1 ${
+                scudoEsamiAttivo
+                  ? 'bg-cyan-100 text-cyan-800 ring-2 ring-cyan-400'
+                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+              }`}
+            >
+              <span>{scudoEsamiAttivo ? '❄️ Scudo ON ✕' : '❄️ Scudo'}</span>
+            </button>
+
+            {/* PILLOLA SERIE GIORNI */}
+            <div className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-black flex items-center space-x-1 border border-amber-200">
+              <span>🔥 {giorniSerie}g</span>
+            </div>
+
+            {/* PILLOLA GOCCE */}
+            <div className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-black flex items-center space-x-1 border border-rose-200">
+              <span>🩸 {gocceTotali}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* 2. MAIN CENTRALE CON OVERFLOW-Y-AUTO */}
+        <main className="flex-1 overflow-y-auto overscroll-contain px-4 pt-3 pb-6 space-y-4">
+          {schedaAttiva === 'home' && (
+            <SchermataHome
+              profilo={profilo}
+              gocce={gocceTotali}
+              aggiungiGocce={aggiungiGocce}
+              giorniSerie={giorniSerie}
+              scudoEsamiAttivo={scudoEsamiAttivo}
+              idratazioneOggi={idratazioneOggi}
+              setIdratazioneOggi={setIdratazioneOggi}
+              giorniTrascorsi={giorniTrascorsi}
+              setGiorniTrascorsi={setGiorniTrascorsi}
+              tipoDonatrice={tipoDonatrice}
+              setTipoDonatrice={setTipoDonatrice}
+              donazioneConvalidata={donazioneConvalidata}
+              idoneitaVerificata={idoneitaVerificata}
+              compagnoPrenotato={compagnoPrenotato}
+              avatar={avatar}
+              setModaleAvatarAperta={setModaleAvatarAperta}
+              setModaleVerificaAperta={setModaleVerificaAperta}
+              setSchedaAttiva={setSchedaAttiva}
+              mostraNotifica={mostraNotifica}
+            />
+          )}
+
+          {schedaAttiva === 'missioni' && (
+            <SchermataMissioniOggi
+              gocce={gocceTotali}
+              aggiungiGocce={aggiungiGocce}
+              giorniSerie={giorniSerie}
+              setGiorniSerie={setGiorniSerie}
+              mostraNotifica={mostraNotifica}
+              giornataQuiz={giornataQuiz}
+              setGiornataQuiz={setGiornataQuiz}
+              risposteQuiz={risposteQuiz}
+              setRisposteQuiz={setRisposteQuiz}
+              bauleGiornoRiscattato={bauleGiornoRiscattato}
+              setBauleGiornoRiscattato={setBauleGiornoRiscattato}
+              scossaInviata={scossaInviata}
+              setScossaInviata={setScossaInviata}
+            />
+          )}
+
+          {schedaAttiva === 'compagno' && (
+            <SchermataCompagnoDonazione
+              idoneitaVerificata={idoneitaVerificata}
+              setIdoneitaVerificata={setIdoneitaVerificata}
+              compagnoPrenotato={compagnoPrenotato}
+              setCompagnoPrenotato={setCompagnoPrenotato}
+              donazioneConvalidata={donazioneConvalidata}
+              setModaleConvalidaAperta={setModaleConvalidaAperta}
+              aggiungiGocce={aggiungiGocce}
+              nome={profilo.nome}
+              facolta={profilo.facolta}
+              chatMessaggi={chatMessaggi}
+              setChatMessaggi={setChatMessaggi}
+              mostraNotifica={mostraNotifica}
+            />
+          )}
+
+          {schedaAttiva === 'classifiche' && (
+            <SchermataClassifiche
+              puntiUtente={gocceTotali}
+              setPuntiUtente={setGocceTotali}
+              facolta={profilo.facolta}
+              mostraNotifica={mostraNotifica}
+              avatar={avatar}
+              couponRiscattati={couponRiscattati}
+              setCouponRiscattati={setCouponRiscattati}
+            />
+          )}
+        </main>
+
+        {/* 3. NAV IN BASSO (SHRINK-0 Z-30 ANCORATA IN FONDO AL 100%) */}
+        <nav className="shrink-0 bg-white border-t border-stone-200 flex justify-around items-center py-2.5 px-1 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+          <PulsanteNav
+            icona="🏠"
+            etichetta="Home"
+            attivo={schedaAttiva === 'home'}
+            onClick={() => setSchedaAttiva('home')}
+          />
+          <PulsanteNav
+            icona="🎯"
+            etichetta="Quiz & Serie"
+            badge={!bauleGiornoRiscattato[giornataQuiz] ? '!' : null}
+            attivo={schedaAttiva === 'missioni'}
+            onClick={() => setSchedaAttiva('missioni')}
+          />
+          <PulsanteNav
+            icona="🤝"
+            etichetta="Tutor & SIMT"
+            badge={!compagnoPrenotato ? '1' : null}
+            attivo={schedaAttiva === 'compagno'}
+            onClick={() => setSchedaAttiva('compagno')}
+          />
+          <PulsanteNav
+            icona="🏆"
+            etichetta="Classifica"
+            attivo={schedaAttiva === 'classifiche'}
+            onClick={() => setSchedaAttiva('classifiche')}
+          />
+        </nav>
+
+        {/* NOTIFICA TOAST ELEGANTE IN ALTO */}
+        {notifica.visibile && (
+          <div className="absolute top-16 left-4 right-4 z-50 animate-in fade-in slide-in-from-top duration-300">
+            <div className="bg-stone-900 text-white p-3.5 rounded-2xl shadow-xl border border-stone-800 flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black text-white">{notifica.titolo}</h4>
+                <p className="text-[11px] text-stone-300 mt-0.5">{notifica.messaggio}</p>
+              </div>
+              {notifica.punti !== 0 && (
+                <span
+                  className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ml-2 ${
+                    notifica.punti > 0
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-stone-800 text-amber-400'
+                  }`}
+                >
+                  {notifica.punti > 0 ? `+${notifica.punti}` : notifica.punti} 💧
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* MODALI APP */}
+        {modaleVerificaAperta && (
+          <ModaleVerificaAteneo
+            profilo={profilo}
+            setProfilo={setProfilo}
+            onClose={() => setModaleVerificaAperta(false)}
+            mostraNotifica={mostraNotifica}
+          />
+        )}
+
+        {modaleAvatarAperta && (
+          <ModalePersonalizzaAvatar
+            avatar={avatar}
+            setAvatar={setAvatar}
+            vestiSbloccate={vestiSbloccate}
+            setVestiSbloccate={setVestiSbloccate}
+            accessoriSbloccati={accessoriSbloccati}
+            setAccessoriSbloccati={setAccessoriSbloccati}
+            gocceTotali={gocceTotali}
+            setGocceTotali={setGocceTotali}
+            profilo={profilo}
+            setProfilo={setProfilo}
+            onClose={() => setModaleAvatarAperta(false)}
+            mostraNotifica={mostraNotifica}
+          />
+        )}
+
+        {modaleConvalidaAperta && (
+          <ModaleConvalidaClinica
+            onClose={() => setModaleConvalidaAperta(false)}
+            onConvalida={eseguiConvalidaDonazione}
+            nome={profilo.nome}
+            facolta={profilo.facolta}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
