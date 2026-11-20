@@ -5240,6 +5240,409 @@ function ModalePersonalizzaAvatar({
 }
 
 // ============================================================================
+// MASCOTTE SACCA DI SANGUE CON TOCCO UNIPV (SVG LEGGERO ISPIRATO AL LOGO)
+// ============================================================================
+function SaccaMascotte({ posa = 'stelle', size = 'md' }) {
+  const dim = size === 'sm' ? 'w-10 h-11' : size === 'lg' ? 'w-20 h-24' : 'w-14 h-16';
+  return (
+    <svg viewBox="0 0 100 120" className={`${dim} overflow-visible select-none shrink-0`}>
+      <defs>
+        <linearGradient id="saccaBloodGrad" x1="20%" y1="15%" x2="80%" y2="90%">
+          <stop offset="0%" stopColor="#E11D48" />
+          <stop offset="55%" stopColor="#B91C1C" />
+          <stop offset="100%" stopColor="#7F1D1D" />
+        </linearGradient>
+      </defs>
+
+      {/* Stelline decorative in posa Home */}
+      {posa === 'stelle' && (
+        <g fill="#FACC15" stroke="#B45309" strokeWidth="1">
+          <polygon points="10,28 12,33 17,34 13,37 14,42 10,39 6,42 7,37 3,34 8,33" />
+          <polygon points="88,45 90,49 94,50 91,53 92,57 88,55 84,57 85,53 82,50 86,49" />
+        </g>
+      )}
+
+      {/* Gambette */}
+      <path d="M38 97 L38 111 L32 111" stroke="#450A0A" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M62 97 L62 111 L68 111" stroke="#450A0A" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+
+      {/* Braccine */}
+      <path
+        d={posa === 'dito' || posa === 'stelle' ? 'M24 67 Q11 58 14 45' : 'M24 69 Q13 76 16 84'}
+        stroke="#450A0A"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d={posa === 'occhiolino' ? 'M76 67 Q89 58 86 46' : 'M76 69 Q87 76 84 84'}
+        stroke="#450A0A"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        fill="none"
+      />
+
+      {/* Beccucci inferiori della sacca */}
+      <rect x="43" y="96" width="5" height="7" rx="1.5" fill="#F8FAFC" stroke="#450A0A" strokeWidth="1.6" />
+      <rect x="52" y="96" width="5" height="7" rx="1.5" fill="#F8FAFC" stroke="#450A0A" strokeWidth="1.6" />
+
+      {/* Tubicino superiore */}
+      <rect x="46" y="13" width="8" height="10" rx="2" fill="#F8FAFC" stroke="#450A0A" strokeWidth="1.8" />
+
+      {/* Involucro trasparente esterno sacca */}
+      <rect x="22" y="21" width="56" height="76" rx="16" fill="#FFF1F2" stroke="#450A0A" strokeWidth="2.6" />
+
+      {/* Liquido sangue interno con onda superiore */}
+      <path
+        d="M26 42 Q38 36 50 41 Q62 46 74 40 L74 84 C74 90, 69 93, 62 93 L38 93 C31 93, 26 90, 26 84 Z"
+        fill="url(#saccaBloodGrad)"
+      />
+      {/* Riflesso lucido */}
+      <path d="M31 46 L31 78" stroke="#FFE4E6" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
+
+      {/* Tocco da Laurea UniPv inclinato in alto a destra (come nel logo) */}
+      <g transform="rotate(14 66 20)">
+        <polygon points="62,6 91,14 62,22 33,14" fill="#7F1D3A" stroke="#450A0A" strokeWidth="1.8" strokeLinejoin="round" />
+        <path d="M47 18 L47 25 Q62 29 77 25 L77 18" fill="#6B142F" stroke="#450A0A" strokeWidth="1.6" />
+        <path d="M77 15 L85 25 L85 33" stroke="#F59E0B" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <circle cx="85" cy="34" r="2.2" fill="#F59E0B" />
+      </g>
+
+      {/* Viso espressivo */}
+      {posa === 'occhiolino' ? (
+        <g>
+          <circle cx="40" cy="60" r="3.4" fill="#291A15" />
+          <circle cx="41.2" cy="58.8" r="1.1" fill="#FFFFFF" />
+          <path d="M55 60 Q60 56 65 60" stroke="#291A15" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+        </g>
+      ) : (
+        <g>
+          <circle cx="40" cy="60" r="3.4" fill="#291A15" />
+          <circle cx="60" cy="60" r="3.4" fill="#291A15" />
+          <circle cx="41.2" cy="58.8" r="1.1" fill="#FFFFFF" />
+          <circle cx="61.2" cy="58.8" r="1.1" fill="#FFFFFF" />
+        </g>
+      )}
+      <ellipse cx="33" cy="66" rx="3.4" ry="1.8" fill="#FDA4AF" opacity="0.8" />
+      <ellipse cx="67" cy="66" rx="3.4" ry="1.8" fill="#FDA4AF" opacity="0.8" />
+      <path d="M43 68 Q50 76 57 68 Z" fill="#FFFFFF" stroke="#291A15" strokeWidth="1.6" strokeLinejoin="round" />
+
+      {/* Oggetto extra: Sveglia (Visita) */}
+      {posa === 'sveglia' && (
+        <g transform="translate(0, 2)">
+          <circle cx="13" cy="70" r="11" fill="#FFFBEB" stroke="#450A0A" strokeWidth="2" />
+          <circle cx="6" cy="59" r="3" fill="#EF4444" stroke="#450A0A" strokeWidth="1.4" />
+          <circle cx="20" cy="59" r="3" fill="#EF4444" stroke="#450A0A" strokeWidth="1.4" />
+          <line x1="13" y1="70" x2="13" y2="63" stroke="#1C1917" strokeWidth="2" strokeLinecap="round" />
+          <line x1="13" y1="70" x2="18" y2="72" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" />
+        </g>
+      )}
+
+      {/* Oggetto extra: Mappa (Sedi) */}
+      {posa === 'mappa' && (
+        <g>
+          <polygon points="24,78 40,73 54,78 70,73 70,92 54,97 40,92 24,97" fill="#FEF9C3" stroke="#450A0A" strokeWidth="1.6" strokeLinejoin="round" />
+          <path d="M30 85 Q42 80 50 86 Q58 91 65 82" stroke="#38BDF8" strokeWidth="2.4" fill="none" />
+          <circle cx="52" cy="84" r="3" fill="#E11D48" />
+        </g>
+      )}
+
+      {/* Oggetto extra: Stella/Trofeo (Premi) */}
+      {posa === 'trofeo' && (
+        <g>
+          <polygon points="15,62 18,69 25,70 20,75 21,82 15,78 9,82 10,75 5,70 12,69" fill="#FACC15" stroke="#B45309" strokeWidth="1.5" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ============================================================================
+// GUIDA INTERATTIVA (TOUR IN 6 TAPPE) + MINI-SACCA COMPAGNA NELL'ANGOLO
+// ============================================================================
+function GuidaSaccaInterattiva({
+  profilo,
+  schedaAttiva,
+  setSchedaAttiva,
+  tourAttivo,
+  setTourAttivo,
+  stepTour,
+  setStepTour
+}) {
+  const [fumettoAperto, setFumettoAperto] = useState(false);
+  const [indiceFrase, setIndiceFrase] = useState(0);
+  const [ridottaBordo, setRidottaBordo] = useState(false);
+  const [saltaAnim, setSaltaAnim] = useState(false);
+
+  const nome = profilo?.nome || 'Serena';
+
+  const tappeTour = [
+    {
+      scheda: 'home',
+      titolo: '1. La tua Home',
+      posa: 'stelle',
+      testo: `Ciao ${nome}! Il primo passo è solo una visita conoscitiva... tranquilla, non è un esame orale a sorpresa!`
+    },
+    {
+      scheda: 'quiz',
+      titolo: '2. Pre-Quiz Idoneità',
+      posa: 'dito',
+      testo: '15 domande lampo sui requisiti AVIS: finalmente un test in cui non devi prendere 30 e lode per passare!'
+    },
+    {
+      scheda: 'tutor',
+      titolo: '3. Scegli o Diventa Tutor',
+      posa: 'occhiolino',
+      testo: 'Hai un po\' di ansia? Scegli un Tutor! È come un compagno di studi, ma non ti chiederà gli appunti all\'ultimo minuto!'
+    },
+    {
+      scheda: 'visita',
+      titolo: '4. Prenota la 1ª Visita',
+      posa: 'sveglia',
+      testo: 'Ore 08:30 è presto come una lezione del lunedì, ma qui almeno dopo ti offrono la colazione gratis!'
+    },
+    {
+      scheda: 'sedi',
+      titolo: '5. Sedi, Bus e Parcheggi',
+      posa: 'mappa',
+      testo: 'Mappa, autobus e parcheggi gratuiti a Pavia: almeno qui non devi fare a pugni per un posto in aula studio!'
+    },
+    {
+      scheda: 'bonus',
+      titolo: '6. Minigiochi & Premi',
+      posa: 'trofeo',
+      testo: 'Gioca ai minigiochi, fai salire la tua Macro-Area e converti i punti al bar o in copisteria. Buon viaggio!'
+    }
+  ];
+
+  const frasiPerScheda = {
+    home: [
+      `Tranquilla ${nome}, qui l'unico esame sono le analisi del sangue gratuite... e non serve studiare la notte prima!`,
+      'Fun fact: il plasma torna al 100% in 24 ore. Più veloce di te a riprenderti dopo un mercoledì universitario!',
+      'Con una sola donazione puoi aiutare fino a 3 pazienti. Vale molto più di qualsiasi CFU!',
+      'Se la sessione ti prosciuga, almeno in AVIS dopo ti offrono caffè e brioche gratis!'
+    ],
+    quiz: [
+      'Finalmente un quiz universitario dove nessuno ti guarda storto se rispondi "No"!',
+      'Niente domande a trabocchetto da appello di luglio, promesso!',
+      'Dubbi su tatuaggi, pillola o colazione? Apri la tendina delle 12 FAQ qui sotto!',
+      'Questo test non fa media sul libretto: serve solo a farti arrivare serena alla visita.'
+    ],
+    tutor: [
+      'Un Tutor è come un compagno di studi, ma non ti chiederà mai le sbobine il giorno prima dell\'esame!',
+      'Paura dell\'ago? Tutti i Tutor c\'erano passati alla 1ª volta: scrivigli in chat senza problemi!',
+      'Dopo la 1ª donazione puoi diventare Tutor anche tu e accompagnare i prossimi studenti UniPv!'
+    ],
+    visita: [
+      'Ore 08:30 sembra presto, ma dura meno di una fila in mensa al Cravino e la colazione è inclusa!',
+      'Ricorda: al 1° appuntamento fai solo colloquio medico e analisi gratuite, nessuna sacca!',
+      'Consiglio furbo: evita latte e latticini prima del prelievo, così gli esami escono perfetti!',
+      'Quando salvi la visita aggiungila al calendario del telefono, così non rischi di dimenticarla!'
+    ],
+    sedi: [
+      'Parcheggio gratuito vicino alle sedi: più raro di una presa libera in aula studio!',
+      'Le linee 3, 7 e 8 ti portano dritta in sede: zero scuse per perdersi per Pavia!',
+      'Via Taramelli 7 è a due passi dal polo universitario: comodissimo tra una lezione e l\'altra.'
+    ],
+    bonus: [
+      'I punti dei minigiochi valgono davvero: un caffè gratis in sessione esami non ha prezzo!',
+      'La tua Macro-Area punta al podio di fine mese: +100 pt a ogni studente della 1ª area!',
+      'Completa almeno un\'attività al giorno per cambiare il colore del fuoco della tua serie!',
+      'Hai già provato la Feluca pavese o la felpa UNIPV sulla tua Goccia?'
+    ]
+  };
+
+  const posaPerScheda = {
+    home: 'stelle',
+    quiz: 'dito',
+    tutor: 'occhiolino',
+    visita: 'sveglia',
+    sedi: 'mappa',
+    bonus: 'trofeo'
+  };
+
+  const listaFrasi = frasiPerScheda[schedaAttiva] || frasiPerScheda.home;
+  const fraseCorrente = listaFrasi[indiceFrase % listaFrasi.length];
+
+  const vaiAStepTour = (nuovoIndice) => {
+    if (nuovoIndice < 0) return;
+    if (nuovoIndice >= tappeTour.length) {
+      setTourAttivo(false);
+      setSchedaAttiva('home');
+      return;
+    }
+    setStepTour(nuovoIndice);
+    setSchedaAttiva(tappeTour[nuovoIndice].scheda);
+  };
+
+  const toccaMiniSacca = () => {
+    setSaltaAnim(true);
+    setTimeout(() => setSaltaAnim(false), 300);
+    if (!fumettoAperto) {
+      setFumettoAperto(true);
+    } else {
+      setIndiceFrase((i) => i + 1);
+    }
+  };
+
+  // MODALITÀ 1: TOUR GUIDATO INTERATTIVO ALLA 1ª APERTURA (O SU RICHIESTA)
+  if (tourAttivo) {
+    const tappa = tappeTour[stepTour] || tappeTour[0];
+    return (
+      <div className="absolute inset-0 z-40 bg-stone-900/45 flex flex-col justify-end p-3.5 pb-20 pointer-events-auto">
+        <div className="bg-white rounded-[1.75rem] border-2 border-stone-900 shadow-2xl p-4 space-y-3 relative">
+          <div className="flex items-start space-x-3">
+            <div className="-mt-6 shrink-0">
+              <SaccaMascotte posa={tappa.posa} size="lg" />
+            </div>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
+                  {tappa.titolo}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTourAttivo(false)}
+                  className="text-[11px] font-bold text-stone-400 hover:text-stone-700 underline shrink-0"
+                >
+                  Salta
+                </button>
+              </div>
+              <p className="text-xs font-bold text-stone-800 leading-snug pt-0.5">
+                "{tappa.testo}"
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-stone-100">
+            <div className="flex items-center space-x-1">
+              {tappeTour.map((t, idx) => (
+                <button
+                  key={t.scheda}
+                  type="button"
+                  onClick={() => vaiAStepTour(idx)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    idx === stepTour ? 'w-5 bg-rose-600' : 'w-1.5 bg-stone-200'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-1.5">
+              {stepTour > 0 && (
+                <button
+                  type="button"
+                  onClick={() => vaiAStepTour(stepTour - 1)}
+                  className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-[11px] font-black transition"
+                >
+                  ←
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => vaiAStepTour(stepTour + 1)}
+                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] font-black shadow-sm transition active:scale-95"
+              >
+                {stepTour < tappeTour.length - 1 ? `Avanti (${stepTour + 1}/6) →` : 'Inizia! 🎉'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // MODALITÀ 2A: LINGUETTA MINIMIZZATA SUL BORDO DESTRO (ZERO INGOMBRO)
+  if (ridottaBordo) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setRidottaBordo(false);
+          setFumettoAperto(true);
+        }}
+        title="Apri Sacca Guida"
+        className="absolute bottom-20 right-0 z-30 bg-white border border-r-0 border-rose-200 rounded-l-2xl pl-2 pr-1.5 py-1.5 shadow-md flex items-center space-x-1 hover:bg-rose-50 transition"
+      >
+        <span className="text-xs">🩸</span>
+      </button>
+    );
+  }
+
+  // MODALITÀ 2B: MINI-SACCA DISCRETA NELL'ANGOLO + FUMETTO ON-DEMAND
+  return (
+    <div className="absolute bottom-20 right-3 z-30 flex flex-col items-end space-y-2 pointer-events-none">
+      {fumettoAperto && (
+        <div className="pointer-events-auto w-64 max-w-[82vw] bg-white rounded-3xl rounded-br-md border-2 border-stone-900 shadow-xl p-3.5 space-y-2.5">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs font-bold text-stone-800 leading-snug">
+              "{fraseCorrente}"
+            </p>
+            <button
+              type="button"
+              onClick={() => setFumettoAperto(false)}
+              className="w-6 h-6 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 text-[10px] font-black shrink-0 flex items-center justify-center"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-stone-100 text-[10px]">
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSaltaAnim(true);
+                  setTimeout(() => setSaltaAnim(false), 300);
+                  setIndiceFrase((i) => i + 1);
+                }}
+                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-black transition"
+              >
+                🎲 Altra frase
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFumettoAperto(false);
+                  setStepTour(0);
+                  setSchedaAttiva('home');
+                  setTourAttivo(true);
+                }}
+                className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-black transition"
+              >
+                🧭 Tour
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFumettoAperto(false);
+                setRidottaBordo(true);
+              }}
+              className="text-stone-400 hover:text-stone-600 font-bold px-1"
+              title="Nascondi sul bordo"
+            >
+              Nascondi
+            </button>
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={toccaMiniSacca}
+        title="Tocca la Sacca per consigli e frasi!"
+        className={`pointer-events-auto w-12 h-12 rounded-full bg-white border-2 border-rose-300 shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-90 ${
+          saltaAnim ? '-translate-y-1.5 scale-110' : ''
+        }`}
+      >
+        <SaccaMascotte posa={posaPerScheda[schedaAttiva] || 'stelle'} size="sm" />
+      </button>
+    </div>
+  );
+}
+
+// ============================================================================
 // PULSANTE NAV INFERIORE MOBILE-FIRST (TOUCH TARGET COMODO)
 // ============================================================================
 function PulsanteNav({ Icona, etichetta, attivo, onClick }) {
@@ -5303,6 +5706,9 @@ function App() {
   const [serieGiorni, setSerieGiorni] = useState(1);
   const [attivitaOggiFatta, setAttivitaOggiFatta] = useState(false);
   const [modaleSerieAperta, setModaleSerieAperta] = useState(false);
+
+  const [tourAttivo, setTourAttivo] = useState(false);
+  const [stepTour, setStepTour] = useState(0);
 
   const [notifica, setNotifica] = useState({ visibile: false, titolo: '', messaggio: '', punti: 0 });
 
@@ -5430,7 +5836,8 @@ function App() {
             onCompletaRegistrazione={() => {
               setRegistrato(true);
               setSchedaAttiva('home');
-              mostraNotifica(`Benvenuta ${profilo.nome}!`, 'Profilo creato con successo.', 0);
+              setStepTour(0);
+              setTourAttivo(true);
             }}
           />
         ) : (
@@ -5472,7 +5879,7 @@ function App() {
             </header>
 
             {/* 2. CONTENUTO PRINCIPALE SCROLLABILE */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 sm:px-4 pt-3 pb-6 space-y-4">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 sm:px-4 pt-3 pb-20 space-y-4">
               {schedaAttiva === 'home' && (
                 <SchermataHome
                   profilo={profilo}
@@ -5597,6 +6004,19 @@ function App() {
               />
             </nav>
           </>
+        )}
+
+        {/* GUIDA INTERATTIVA TOUR + MINI-SACCA COMPAGNA NELL'ANGOLO */}
+        {registrato && !modaleAvatarAperta && !modaleSerieAperta && (
+          <GuidaSaccaInterattiva
+            profilo={profilo}
+            schedaAttiva={schedaAttiva}
+            setSchedaAttiva={setSchedaAttiva}
+            tourAttivo={tourAttivo}
+            setTourAttivo={setTourAttivo}
+            stepTour={stepTour}
+            setStepTour={setStepTour}
+          />
         )}
 
         {/* TOAST NOTIFICA */}
