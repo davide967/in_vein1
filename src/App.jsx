@@ -6355,71 +6355,74 @@ function GuidaSaccaInterattiva({
       scheda: 'home',
       titolo: '1. La tua Home',
       posa: 'stelle',
-      testo: `Ciao ${nome}! Il primo passo è solo una visita conoscitiva con analisi gratuite.`
+      testo: `Ciao ${nome}! Il primo passo è solo una visita conoscitiva... niente ansia, non è un esame orale a sorpresa!`
     },
     {
       scheda: 'quiz',
       titolo: '2. Pre-Quiz Idoneità',
       posa: 'dito',
-      testo: '15 domande rapide sui requisiti AVIS per capire subito se puoi candidarti.'
+      testo: '15 domande lampo sui requisiti AVIS: finalmente un test in cui non devi prendere 30 e lode per passare!'
     },
     {
       scheda: 'tutor',
       titolo: '3. Scegli o Diventa Tutor',
       posa: 'occhiolino',
-      testo: 'Se non vuoi andare da solo, scegli un Tutor che ti aspetta davanti alla sede.'
+      testo: 'Hai un po\' di ansia? Scegli un Tutor! È come un compagno di studi, ma non ti chiederà gli appunti all\'ultimo minuto!'
     },
     {
       scheda: 'visita',
       titolo: '4. Richiedi la 1ª Visita',
       posa: 'sveglia',
-      testo: 'Compili il modulo su avis.pv.it e la segreteria ti chiama per fissare giorno e ora.'
+      testo: 'Compili il modulo sul sito AVIS e la segreteria ti richiama: niente appuntamenti al buio, e poi colazione offerta!'
     },
     {
       scheda: 'sedi',
       titolo: '5. Sedi, Bus e Parcheggi',
       posa: 'mappa',
-      testo: 'Qui trovi gli orari di Via Taramelli 7 e del San Matteo, con bus e parcheggi gratuiti.'
+      testo: 'Mappa, autobus e parcheggi gratuiti a Pavia: almeno qui non devi fare a pugni per un posto in aula studio!'
     },
     {
       scheda: 'bonus',
       titolo: '6. Minigiochi & Ringraziamenti',
       posa: 'trofeo',
-      testo: 'Impara con i minigiochi, fai salire la tua Macro-Area e scopri i ringraziamenti dei partner a Pavia.'
+      testo: 'Impara con i minigiochi, fai salire la tua Macro-Area e scopri i piccoli grazie dai bar e copisterie di Pavia. Buon viaggio!'
     }
   ];
 
   const frasiPerScheda = {
     home: [
-      `Alla 1ª volta fai solo una visita con esami del sangue gratuiti, nessun prelievo completo.`,
-      'Il plasma si recupera in circa 24 ore bevendo normalmente acqua.',
-      'Con una donazione di sangue intero si possono aiutare fino a tre pazienti.',
-      'Dopo ogni visita o donazione in sede la colazione è offerta.'
+      `Niente paura ${nome}, qui l'unico esame sono le analisi del sangue gratuite... e non serve studiare la notte prima!`,
+      'Fun fact: il plasma torna al 100% in 24 ore. Più veloce di un recupero dopo una giornata intensa di lezioni!',
+      'Con una sola donazione puoi aiutare fino a 3 pazienti. Vale molto più di qualsiasi CFU!',
+      'Se la sessione ti prosciuga, almeno in AVIS dopo ti offrono caffè e brioche gratis!'
     ],
     quiz: [
-      'Le risposte del Pre-Quiz restano solo sullo schermo e non vengono salvate.',
-      'È un controllo orientativo: la valutazione finale la fa sempre il medico AVIS.',
-      'Dubbi su tatuaggi, pillola o colazione? Apri la tendina delle 12 domande qui sotto.'
+      'Finalmente un quiz universitario dove nessuno ti guarda storto se rispondi "No"!',
+      'Niente domande a trabocchetto da appello di luglio, promesso!',
+      'Dubbi su tatuaggi, pillola o colazione? Apri la tendina delle 12 FAQ qui sotto!',
+      'Questo test non fa media sul libretto: serve solo a farti arrivare con serenità alla visita.'
     ],
     tutor: [
-      'Tutti i Tutor sono studenti già donatori abilitati da AVIS Pavia.',
-      'Hai dubbi sulla prima visita? Scrivigli in chat senza impegno.',
-      'Dopo la 1ª donazione verificata puoi diventare Tutor anche tu.'
+      'Un Tutor è come un compagno di studi, ma non ti chiederà mai le sbobine il giorno prima dell\'esame!',
+      'Paura dell\'ago? Tutti i Tutor c\'erano passati alla 1ª volta: scrivigli in chat senza problemi!',
+      'Dopo la 1ª donazione verificata puoi abilitarti con AVIS e accompagnare i prossimi studenti UniPv!'
     ],
     visita: [
-      'Compila il modulo su avis.pv.it: la segreteria ti richiama per Via Taramelli 7 o San Matteo (Pad. 12).',
-      'Evita latte, yogurt e brioche farcite prima degli esami: prendi tè o caffè leggero.',
-      'Salva il promemoria a 3 settimane: se AVIS non ha ancora chiamato, telefona in segreteria.'
+      'Compila il modulo su avis.pv.it: la segreteria ti richiama per fissare la visita in Via Taramelli 7 (Mer/Sab) o al San Matteo Pad. 12 (Lun–Ven)!',
+      'Ricorda: al 1° appuntamento fai solo colloquio medico e analisi gratuite, nessuna sacca!',
+      'Consiglio furbo: evita latte e latticini prima del prelievo, così gli esami escono perfetti!',
+      'Salva il promemoria a 3 settimane: se AVIS non ti ha ancora chiamato, basta una telefonata in segreteria!'
     ],
     sedi: [
-      'Via Taramelli 7 è vicino al polo Cravino e ha parcheggio gratuito interno per i donatori.',
-      'La linea 3 raggiunge entrambe le sedi (3 e 6 per Via Taramelli, 3, 7 e 8 per il San Matteo).',
-      'Al San Matteo il biglietto del multipiano viene convalidato gratuitamente al Centro Trasfusionale.'
+      'Parcheggio gratuito vicino alle sedi: più raro di una presa libera in aula studio!',
+      'Le linee 3, 6, 7 e 8 ti portano in sede (3 e 6 per Via Taramelli, 3/7/8 al San Matteo): zero scuse per perdersi a Pavia!',
+      'Via Taramelli 7 è a due passi dal polo universitario: comodissimo tra una lezione e l\'altra.'
     ],
     bonus: [
-      'Visita (+40 pt), donazione (+100 pt) e tutoraggio (+35 pt) pesano molto più dei minigiochi.',
-      'La classifica premia la media per studente attivo della tua Macro-Area.',
-      'Con i punti attivi puoi sbloccare nuovi accessori per la tua Goccia.'
+      'La donazione verificata fa il salto più grande (+100 pt), mentre caffè e stampe sono il grazie della comunità pavese!',
+      'La tua Macro-Area punta al podio o al premio Miglior Crescita del mese!',
+      'Mantieni viva la tua costanza settimanale e i cicli di donazione per far evolvere il colore del fuoco!',
+      'Hai già provato la Feluca pavese o la felpa UNIPV sulla tua Goccia?'
     ]
   };
 
