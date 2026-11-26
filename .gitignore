@@ -3,3 +3,5 @@ dist/
 .env
 .env.*
 !.env.example
+invein_accounts_db.json
+invein_accounts_db.json.tmp

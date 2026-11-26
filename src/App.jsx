@@ -25,6 +25,8 @@ const MACRO_DIPARTIMENTI_UNIPV = [
 // PERSISTENZA LOCALE, DATE REALI, EMAIL (DNS MX + EMAILJS) & CODICI AVIS
 // ============================================================================
 const STORAGE_KEY_APP = 'invein_pavia_state_v2';
+const STORAGE_KEY_ACCOUNTS = 'invein_pavia_accounts_v1';
+const STORAGE_KEY_AUTH_META = 'invein_pavia_auth_meta_v1';
 const STORAGE_KEY_EMAILJS = 'invein_pavia_emailjs_v1';
 const EMAILJS_CONFIG_DEFAULT = {
   serviceId: 'service_j716kmf',
@@ -32,6 +34,17 @@ const EMAILJS_CONFIG_DEFAULT = {
   publicKey: 'LJdUiqkyms8RMaz49'
 };
 const MAX_PUNTI_GIOCHI_GIORNO = 6;
+
+function creaAvatarBase() {
+  return {
+    coloreGoccia: 'rubino',
+    abbigliamento: 'nessuno',
+    copricapo: 'nessuno',
+    oggettoStudio: 'nessuno',
+    visoAccessorio: 'cerotto',
+    espressione: 'sorridente'
+  };
+}
 
 function caricaConfigEmailJS() {
   try {
@@ -125,6 +138,56 @@ function mescolaCarte(lista) {
     copia[j] = tmp;
   }
   return copia;
+}
+
+function calcolaIndiceGiornoLocale(dataISO = ottieniDataOggiISO()) {
+  let d = new Date();
+  if (typeof dataISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dataISO)) {
+    const parti = dataISO.split('-');
+    d = new Date(Number(parti[0]), Number(parti[1]) - 1, Number(parti[2]), 12, 0, 0);
+  } else {
+    d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0);
+  }
+  const epoch = new Date(2026, 0, 1, 12, 0, 0);
+  return Math.round((d.getTime() - epoch.getTime()) / 86400000);
+}
+
+function ottieniCountdownMezzanotte() {
+  const now = new Date();
+  const prossimaMezzanotte = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  const diffMs = Math.max(0, prossimaMezzanotte.getTime() - now.getTime());
+  const minutiTot = Math.ceil(diffMs / 60000);
+  const ore = Math.floor(minutiTot / 60);
+  const minuti = minutiTot % 60;
+  return `${ore}h ${String(minuti).padStart(2, '0')}m`;
+}
+
+function mescolaConSeme(lista, seme) {
+  const copia = [...lista];
+  let s = (Math.abs(Math.floor(Number(seme) || 1)) + 1) >>> 0;
+  for (let i = copia.length - 1; i > 0; i--) {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    const j = s % (i + 1);
+    const tmp = copia[i];
+    copia[i] = copia[j];
+    copia[j] = tmp;
+  }
+  return copia;
+}
+
+function selezionaElementiGiorno(pool, quanti, turno) {
+  if (!Array.isArray(pool) || pool.length === 0) return [];
+  const len = pool.length;
+  const count = Math.min(quanti, len);
+  const turnoPos = Math.max(0, Math.floor(Number(turno) || 0));
+  const ciclo = Math.floor((turnoPos * count) / len);
+  const offset = (turnoPos * count) % len;
+  const ordinato = ciclo === 0 ? [...pool] : mescolaConSeme(pool, ciclo + 101);
+  const risultato = [];
+  for (let i = 0; i < count; i++) {
+    risultato.push(ordinato[(offset + i) % len]);
+  }
+  return risultato;
 }
 
 function validaCodiceAvis(tipo, valore) {
@@ -415,7 +478,7 @@ function CustomAvatar({ config, size = 'md', onClick, felice = false, frameless 
   const sizes = {
     xs: 'w-8 h-8',
     sm: 'w-11 h-11',
-    md: 'w-14 h-14',
+    md: 'w-16 h-16',
     lg: 'w-20 h-20',
     xl: 'w-28 h-28',
     stage: 'w-32 h-32'
@@ -429,11 +492,12 @@ function CustomAvatar({ config, size = 'md', onClick, felice = false, frameless 
     imperiale: { top: '#FB7185', mid: '#881337', bot: '#450A0A', rim: '#FDE68A' }
   };
 
+  const uidRef = useRef(`g${Math.random().toString(36).slice(2, 8)}`);
   const coloreKey = config?.coloreGoccia || 'rubino';
   const pal = paletteGoccia[coloreKey] || paletteGoccia.rubino;
-  const gradId = `gocciaGrad-${coloreKey}-${frameless ? 'st' : 'av'}`;
+  const gradId = `gocciaGrad-${coloreKey}-${uidRef.current}`;
 
-  const espressione = felice ? 'entusiasta' : (config?.espressione || 'sorridente');
+  const espressione = config?.espressione || (felice ? 'entusiasta' : 'sorridente');
   const abbigliamento = config?.abbigliamento || 'nessuno';
   const copricapo = config?.copricapo || 'nessuno';
   const oggettoStudio = config?.oggettoStudio || 'nessuno';
@@ -745,24 +809,28 @@ function CustomAvatar({ config, size = 'md', onClick, felice = false, frameless 
         {/* === 5. ACCESSORI & GADGET === */}
         {oggettoStudio === 'spilla_portachiavi' && (
           <g>
-            <circle cx="34" cy="69" r="5.5" fill="#7F1D3A" stroke="#FDE68A" strokeWidth="1.6" />
-            <circle cx="34" cy="69" r="2" fill="#FDE68A" />
+            <polygon points="30,72 28,83 34,79 40,83 38,72" fill="#FDE68A" stroke="#7F1D3A" strokeWidth="1" />
+            <circle cx="34" cy="69" r="6" fill="#FACC15" stroke="#FFFFFF" strokeWidth="1.6" />
+            <circle cx="34" cy="69" r="2.6" fill="#7F1D3A" />
           </g>
         )}
 
         {oggettoStudio === 'cancelleria_unipv' && (
           <g>
-            <rect x="65" y="57" width="20" height="25" rx="2.5" fill="#7F1D3A" stroke="#FDE68A" strokeWidth="1.4" />
-            <rect x="69" y="62" width="12" height="4.5" rx="1" fill="#FDE68A" />
-            <line x1="67" y1="59" x2="67" y2="80" stroke="#4C0519" strokeWidth="2" />
+            <rect x="65" y="57" width="20" height="25" rx="2.5" fill="#7F1D3A" stroke="#FFFFFF" strokeWidth="1.4" />
+            <rect x="67" y="59" width="3" height="21" rx="1" fill="#FFFFFF" />
+            <rect x="72" y="63" width="10" height="4.5" rx="1" fill="#FDE68A" />
+            <path d="M77 82 L77 88 L79.5 86 L82 88 L82 82 Z" fill="#FACC15" />
           </g>
         )}
 
         {oggettoStudio === 'stetoscopio' && (
           <g>
-            <path d="M33 65 C33 78, 67 78, 67 65" fill="none" stroke="#1E293B" strokeWidth="2.6" strokeLinecap="round" />
+            <path d="M33 65 C33 78, 67 78, 67 65" fill="none" stroke="#E2E8F0" strokeWidth="4.2" strokeLinecap="round" />
+            <line x1="50" y1="75" x2="50" y2="83" stroke="#E2E8F0" strokeWidth="4.2" strokeLinecap="round" />
+            <path d="M33 65 C33 78, 67 78, 67 65" fill="none" stroke="#1E293B" strokeWidth="2.4" strokeLinecap="round" />
             <line x1="50" y1="75" x2="50" y2="83" stroke="#1E293B" strokeWidth="2.4" />
-            <circle cx="50" cy="84" r="3.4" fill="#CBD5E1" stroke="#334155" strokeWidth="1.4" />
+            <circle cx="50" cy="84" r="3.8" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" />
           </g>
         )}
 
@@ -777,9 +845,10 @@ function CustomAvatar({ config, size = 'md', onClick, felice = false, frameless 
 
         {oggettoStudio === 'borraccia_unipv' && (
           <g>
-            <rect x="71" y="54" width="13" height="28" rx="3.5" fill="#7F1D3A" stroke="#E2E8F0" strokeWidth="1.2" />
+            <rect x="71" y="54" width="13" height="28" rx="3.5" fill="#7F1D3A" stroke="#FFFFFF" strokeWidth="1.4" />
             <rect x="73" y="49" width="9" height="5" rx="1.5" fill="#CBD5E1" stroke="#64748B" strokeWidth="1" />
-            <circle cx="77.5" cy="67" r="3" fill="#FDE68A" opacity="0.95" />
+            <rect x="71.8" y="63" width="11.4" height="8" fill="#FEF3C7" />
+            <text x="77.5" y="69" textAnchor="middle" fontSize="5" fontWeight="900" fill="#7F1D3A" fontFamily="sans-serif">PV</text>
           </g>
         )}
 
@@ -1235,20 +1304,29 @@ function BarraGocciaProgressiva({
 // SCHERMATA INIZIALE DI REGISTRAZIONE (MACRO-DIPARTIMENTI, LOGO IN VEIN)
 // ============================================================================
 function SchermataRegistrazione({
-  profilo,
-  setProfilo,
   avatar,
   setModaleAvatarAperta,
   emailJsConfig,
+  accounts,
   mostraNotifica,
-  onCompletaRegistrazione
+  onAccediUtente,
+  onCompletaRegistrazione,
+  onIniziaNuovaRegistrazione
 }) {
-  const [nome, setNome] = useState(profilo.nome || '');
-  const [cognome, setCognome] = useState(profilo.cognome || '');
-  const [facolta, setFacolta] = useState(profilo.facolta || MACRO_DIPARTIMENTI_UNIPV[1]);
+  const [vistaAuth, setVistaAuth] = useState('login'); // 'login' | 'registrazione'
+
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [mostraPasswordLogin, setMostraPasswordLogin] = useState(false);
+  const [ricordaAccesso, setRicordaAccesso] = useState(false);
+  const [erroreLogin, setErroreLogin] = useState('');
+
+  const [nome, setNome] = useState('');
+  const [cognome, setCognome] = useState('');
+  const [facolta, setFacolta] = useState(MACRO_DIPARTIMENTI_UNIPV[1]);
   const [confermaFacolta, setConfermaFacolta] = useState(false);
 
-  const [email, setEmail] = useState(profilo.email || '');
+  const [email, setEmail] = useState('');
   const [codiceEmailAtteso, setCodiceEmailAtteso] = useState('');
   const [codiceScadenzaMs, setCodiceScadenzaMs] = useState(0);
   const [codiceEmailInput, setCodiceEmailInput] = useState('');
@@ -1271,6 +1349,42 @@ function SchermataRegistrazione({
     return () => clearTimeout(timer);
   }, [cooldownRinvio]);
 
+  const apriRegistrazione = () => {
+    setErroreLogin('');
+    if (onIniziaNuovaRegistrazione) onIniziaNuovaRegistrazione();
+    setVistaAuth('registrazione');
+  };
+
+  const tornaALogin = () => {
+    setErroreEmail('');
+    setErroreLogin('');
+    setVistaAuth('login');
+  };
+
+  const inviaLogin = (e) => {
+    if (e) e.preventDefault();
+    const emailPulita = (loginEmail || '').trim().toLowerCase();
+    if (!emailPulita) {
+      setErroreLogin('Inserisci la tua email per accedere.');
+      return;
+    }
+    const account = accounts?.[emailPulita];
+    if (!account) {
+      setErroreLogin('Nessun account trovato con questa email. Clicca su "Non sei ancora registrato?" qui sotto.');
+      return;
+    }
+    if (!loginPassword) {
+      setErroreLogin('Inserisci la password.');
+      return;
+    }
+    if (account.password !== loginPassword) {
+      setErroreLogin('Password non corretta. Riprova.');
+      return;
+    }
+    setErroreLogin('');
+    onAccediUtente(emailPulita, { ricordaAccesso });
+  };
+
   const onCambiaEmail = (nuovaEmail) => {
     setEmail(nuovaEmail);
     setEmailVerificata(false);
@@ -1287,6 +1401,10 @@ function SchermataRegistrazione({
     const esito = verificaFormatoEmail(email);
     if (!esito.valida) {
       setErroreEmail(esito.errore);
+      return;
+    }
+    if (accounts?.[esito.email]) {
+      setErroreEmail('Questa email è già registrata: torna al Login per accedere.');
       return;
     }
 
@@ -1366,15 +1484,18 @@ function SchermataRegistrazione({
   const inviaRegistrazione = (e) => {
     if (e) e.preventDefault();
     if (!puoRegistrarsi) return;
+    const emailPulita = email.trim().toLowerCase();
+    if (accounts?.[emailPulita]) {
+      setErroreEmail('Questa email è già registrata: torna al Login per accedere.');
+      return;
+    }
     const profiloSalvato = {
-      ...profilo,
       nome: nome.trim(),
       cognome: cognome.trim(),
       facolta,
-      email: email.trim().toLowerCase()
+      email: emailPulita
     };
-    setProfilo(profiloSalvato);
-    onCompletaRegistrazione(profiloSalvato);
+    onCompletaRegistrazione({ profilo: profiloSalvato, password });
   };
 
   return (
@@ -1392,37 +1513,137 @@ function SchermataRegistrazione({
             IN VEIN
           </h1>
           <p className="text-xs text-stone-500 font-medium">
-            Il percorso per iniziare a donare a Pavia
+            {vistaAuth === 'login'
+              ? 'Accedi al tuo profilo donatore a Pavia'
+              : 'Il percorso per iniziare a donare a Pavia'}
           </p>
         </div>
       </div>
 
-      <form onSubmit={inviaRegistrazione} className="bg-white p-4 sm:p-5 rounded-[2rem] border border-stone-200/80 shadow-sm space-y-3.5 text-xs my-4">
-        <div className="flex items-center justify-between pb-3 border-b border-stone-100 gap-2">
-          <div className="flex items-center space-x-3 min-w-0">
-            <CustomAvatar
-              config={avatar}
-              size="md"
-              felice={true}
-              onClick={() => setModaleAvatarAperta(true)}
+      {vistaAuth === 'login' ? (
+        <form onSubmit={inviaLogin} className="bg-white p-5 rounded-[2rem] border border-stone-200/80 shadow-sm space-y-4 text-xs my-6">
+          <div className="space-y-0.5">
+            <h2 className="text-base font-black text-stone-900">Accedi</h2>
+            <p className="text-[11px] text-stone-500">
+              Inserisci la tua email e la password scelte alla registrazione.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-stone-500 mb-1">
+              Username (la tua email)
+            </label>
+            <input
+              type="email"
+              value={loginEmail}
+              onChange={(e) => {
+                setLoginEmail(e.target.value);
+                setErroreLogin('');
+              }}
+              placeholder="nome.cognome@email.it"
+              className="w-full px-3.5 py-3 bg-stone-50 border border-stone-200 rounded-2xl font-medium text-stone-900 focus:outline-none focus:bg-white focus:border-rose-500 transition"
+              required
             />
-            <div className="min-w-0">
-              <span className="text-xs font-black text-stone-900 block truncate">
-                La tua Goccia Mascotte
-              </span>
-              <span className="text-[11px] text-stone-400 block truncate">
-                Personalizza con abiti UniPv
-              </span>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-stone-500 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={mostraPasswordLogin ? 'text' : 'password'}
+                value={loginPassword}
+                onChange={(e) => {
+                  setLoginPassword(e.target.value);
+                  setErroreLogin('');
+                }}
+                placeholder="Inserisci la password"
+                className="w-full px-3.5 py-3 pr-11 bg-stone-50 border border-stone-200 rounded-2xl font-bold text-stone-900 focus:outline-none focus:bg-white focus:border-rose-500 transition"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setMostraPasswordLogin((v) => !v)}
+                aria-label={mostraPasswordLogin ? 'Nascondi password' : 'Mostra password'}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-700 transition"
+              >
+                <IconaOcchio visibile={mostraPasswordLogin} />
+              </button>
             </div>
           </div>
+
+          <label className="flex items-center space-x-2 cursor-pointer select-none pt-0.5">
+            <input
+              type="checkbox"
+              checked={ricordaAccesso}
+              onChange={(e) => setRicordaAccesso(e.target.checked)}
+              className="w-4 h-4 rounded accent-rose-600"
+            />
+            <span className="text-[11px] font-semibold text-stone-600">Resta collegato su questo dispositivo</span>
+          </label>
+
+          {erroreLogin && (
+            <p className="text-[11px] font-bold text-rose-600 leading-snug">{erroreLogin}</p>
+          )}
+
           <button
-            type="button"
-            onClick={() => setModaleAvatarAperta(true)}
-            className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-[11px] font-black transition shrink-0"
+            type="submit"
+            className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg shadow-stone-900/15 active:scale-95 transition"
           >
-            Personalizza
+            Accedi →
           </button>
-        </div>
+
+          <div className="pt-2 border-t border-stone-100 text-center space-y-1.5">
+            <span className="text-[11px] font-bold text-stone-500 block">
+              Non sei ancora registrato?
+            </span>
+            <button
+              type="button"
+              onClick={apriRegistrazione}
+              className="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-2xl font-black text-xs transition active:scale-95"
+            >
+              Non sei ancora registrato? Crea il tuo profilo →
+            </button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={inviaRegistrazione} className="bg-white p-4 sm:p-5 rounded-[2rem] border border-stone-200/80 shadow-sm space-y-3.5 text-xs my-4">
+          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+            <span className="text-xs font-black text-stone-900">Nuova Registrazione</span>
+            <button
+              type="button"
+              onClick={tornaALogin}
+              className="text-[11px] font-black text-rose-600 hover:text-rose-700 underline"
+            >
+              ← Torna al Login
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between pb-3 border-b border-stone-100 gap-2">
+            <div className="flex items-center space-x-3 min-w-0">
+              <CustomAvatar
+                config={avatar}
+                size="md"
+                onClick={() => setModaleAvatarAperta(true)}
+              />
+              <div className="min-w-0">
+                <span className="text-xs font-black text-stone-900 block truncate">
+                  La tua Goccia Mascotte
+                </span>
+                <span className="text-[11px] text-stone-400 block truncate">
+                  Personalizza con abiti UniPv
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setModaleAvatarAperta(true)}
+              className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-[11px] font-black transition shrink-0"
+            >
+              Personalizza
+            </button>
+          </div>
 
         <div className="grid grid-cols-2 gap-2.5">
           <div>
@@ -1647,8 +1868,18 @@ function SchermataRegistrazione({
               Completa tutti i campi, verifica l'email e conferma la password per iniziare.
             </p>
           )}
+          <div className="pt-1.5 text-center">
+            <button
+              type="button"
+              onClick={tornaALogin}
+              className="text-[11px] font-bold text-stone-500 hover:text-stone-800 underline"
+            >
+              Hai già un account? Accedi →
+            </button>
+          </div>
         </div>
       </form>
+      )}
 
       <p className="text-[11px] text-stone-400 text-center pb-2">
         I progressi restano salvati su questo dispositivo
@@ -1668,6 +1899,7 @@ function SchermataHome({
   passo2Completato,
   passo3Completato,
   visitaVerificataAvis,
+  tutorSceltoId,
   isTutorAttivo,
   setSchedaAttiva,
   apriDiventaTutor,
@@ -1779,6 +2011,7 @@ function SchermataHome({
             </div>
             <span className="text-[10px] font-bold text-stone-600 text-center leading-tight">
               Tutor
+              <span className="block text-[8px] text-stone-400 font-semibold">Facoltativo</span>
             </span>
           </button>
 
@@ -1816,25 +2049,38 @@ function SchermataHome({
           </button>
         </div>
 
-        <button
-          onClick={() => {
-            if (!passo1Completato) setSchedaAttiva('quiz');
-            else if (!passo2Completato) setSchedaAttiva('tutor');
-            else if (!passo3Completato) setSchedaAttiva('visita');
-            else apriDiventaTutor();
-          }}
-          className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-md shadow-rose-600/20 transition active:scale-95"
-        >
-          {!passo1Completato
-            ? 'Inizia dal Pre-Quiz →'
-            : !passo2Completato
-            ? 'Scegli un Tutor →'
-            : !passo3Completato
-            ? 'Richiedi la 1ª Visita AVIS →'
-            : isTutorAttivo
-            ? 'Apri la Dashboard Tutor →'
-            : 'Scopri come diventare Tutor →'}
-        </button>
+        <p className="text-[11px] text-stone-500 bg-stone-50 px-3 py-2 rounded-2xl border border-stone-200/70 leading-snug">
+          ℹ️ Il Tutor è facoltativo: è solo un supporto in più se vuoi compagnia alla 1ª visita, altrimenti puoi andare direttamente in autonomia.
+        </p>
+
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              if (!passo1Completato) setSchedaAttiva('quiz');
+              else if (!passo3Completato) setSchedaAttiva('visita');
+              else apriDiventaTutor();
+            }}
+            className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-md shadow-rose-600/20 transition active:scale-95"
+          >
+            {!passo1Completato
+              ? 'Inizia dal Pre-Quiz →'
+              : !passo3Completato
+              ? 'Richiedi la 1ª Visita AVIS →'
+              : isTutorAttivo
+              ? 'Apri la Dashboard Tutor →'
+              : 'Scopri come diventare Tutor (facoltativo) →'}
+          </button>
+
+          {passo1Completato && !passo3Completato && !tutorSceltoId && (
+            <button
+              type="button"
+              onClick={() => setSchedaAttiva('tutor')}
+              className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-2xl font-bold text-[11px] transition"
+            >
+              Vuoi compagnia? Scegli un Tutor (facoltativo) →
+            </button>
+          )}
+        </div>
       </div>
 
       {/* CICLO DI RECUPERO SINCRONIZZATO CON OROLOGIO TELEFONO */}
@@ -1850,23 +2096,6 @@ function SchermataHome({
         onDonazioneVerificata={onDonazioneVerificata}
         onAvviaSoloTimer={onAvviaSoloTimer}
       />
-
-      {/* ACCESSO DISCRETO ALLE IMPOSTAZIONI */}
-      <button
-        type="button"
-        onClick={apriImpostazioni}
-        className="w-full py-3 px-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200/80 shadow-sm flex items-center justify-between text-xs font-bold text-stone-700 transition"
-      >
-        <span>⚙️ Impostazioni</span>
-        <span className="flex items-center space-x-1.5 shrink-0">
-          {modalitaSviluppatore && (
-            <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-[10px] font-black">
-              DEV ON
-            </span>
-          )}
-          <span className="text-stone-400">Apri →</span>
-        </span>
-      </button>
     </div>
   );
 }
@@ -2020,15 +2249,21 @@ function SchermataPreQuiz({
     }));
   };
 
-  const vaiAvanti = () => {
+  const vaiAvanti = (destinazione = 'visita') => {
     if (indiceCorrente < domandeQuiz.length - 1) {
       setIndiceCorrente((prev) => prev + 1);
     } else {
       if (!passo1Completato) {
         setPasso1Completato(true);
-        mostraNotifica('Pre-Informativa Completata ✓', 'Ora sai come funziona: scegli un Tutor o invia la richiesta di visita.', 0);
+        mostraNotifica(
+          'Pre-Informativa Completata ✓',
+          destinazione === 'tutor'
+            ? 'Puoi scegliere un Tutor facoltativo oppure passare subito alla Visita AVIS.'
+            : 'Ora puoi inviare la richiesta di 1ª Visita AVIS (o scegliere un Tutor facoltativo).',
+          0
+        );
       }
-      setSchedaAttiva('tutor');
+      setSchedaAttiva(destinazione);
     }
   };
 
@@ -2203,14 +2438,30 @@ function SchermataPreQuiz({
         )}
 
         {rispostaAttuale && (
-          <button
-            onClick={vaiAvanti}
-            className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl font-black text-xs transition active:scale-95"
-          >
-            {indiceCorrente < domandeQuiz.length - 1
-              ? `Domanda Successiva (${indiceCorrente + 2} di ${domandeQuiz.length}) →`
-              : 'Completa Pre-Quiz e Vai ai Tutor →'}
-          </button>
+          indiceCorrente < domandeQuiz.length - 1 ? (
+            <button
+              onClick={() => vaiAvanti()}
+              className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl font-black text-xs transition active:scale-95"
+            >
+              {`Domanda Successiva (${indiceCorrente + 2} di ${domandeQuiz.length}) →`}
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <button
+                onClick={() => vaiAvanti('visita')}
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-md shadow-rose-600/20 transition active:scale-95"
+              >
+                Completa Pre-Quiz e Vai alla Visita AVIS →
+              </button>
+              <button
+                type="button"
+                onClick={() => vaiAvanti('tutor')}
+                className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-2xl font-bold text-[11px] transition"
+              >
+                Oppure scegli prima un Tutor (facoltativo) →
+              </button>
+            </div>
+          )
         )}
       </div>
 
@@ -2575,7 +2826,7 @@ function ModaleTutorGrande({
       </div>
 
       {/* FOOTER CON BOTTONE PRINCIPALE */}
-      <div className="p-4 safe-bottom bg-white border-t border-stone-200 shrink-0">
+      <div className="p-4 safe-bottom bg-white border-t border-stone-200 shrink-0 space-y-2">
         <button
           onClick={confermaTutor}
           className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-md shadow-rose-600/20 active:scale-95 transition"
@@ -2584,6 +2835,22 @@ function ModaleTutorGrande({
             ? `✓ ${tutor.nome} è già il tuo Tutor (Vai alla Visita →)`
             : `Scegli ${tutor.nome} come Tuo Tutor →`}
         </button>
+        {tutorSceltoId === tutor.id && (
+          <button
+            type="button"
+            onClick={() => {
+              setTutorSceltoId(null);
+              setPasso2Completato(false);
+              onClose();
+              if (mostraNotifica) {
+                mostraNotifica('Tutor rimosso', 'Puoi prenotare e andare alla visita in totale autonomia.', 0);
+              }
+            }}
+            className="w-full py-2 text-[11px] font-bold text-stone-500 hover:text-stone-800 underline transition"
+          >
+            Rimuovi Tutor (andrò in autonomia)
+          </button>
+        )}
       </div>
     </div>
   );
@@ -3043,13 +3310,23 @@ function SchermataTutor({
 
       {tutorTabAttiva === 'trova' ? (
         <div className="space-y-3.5">
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/80 shadow-sm space-y-1.5">
+          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/80 shadow-sm space-y-2.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md inline-block">
+              Supporto facoltativo
+            </span>
             <h2 className="text-base font-black text-stone-900">
-              Hai timore della prima volta? Non andare senza compagnia!
+              Vuoi compagnia alla prima visita?
             </h2>
             <p className="text-xs text-stone-500 leading-snug">
-              I Tutor volontari abilitati da AVIS Pavia ti accolgono fuori dalla sede e ti accompagnano per tutto il percorso. Scegli chi preferisci per chattare.
+              Non sei obbligato a donare con un Tutor: è una funzionalità in più per chi desidera fare il primo ingresso insieme a uno studente già donatore. Se preferisci fare da solo, puoi passare direttamente alla Visita.
             </p>
+            <button
+              type="button"
+              onClick={() => setSchedaAttiva('visita')}
+              className="w-full py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-2xl text-[11px] font-black transition"
+            >
+              Preferisco andare in autonomia → Vai alla Visita
+            </button>
           </div>
 
           {/* CARD TUTOR GENERALI */}
@@ -3588,6 +3865,9 @@ function SchermataPrenotaVisita({
           <p>
             <strong>1.</strong> Compili il modulo su <strong>avis.pv.it</strong> · <strong>2.</strong> La segreteria ti richiama per fissare la data · <strong>3.</strong> Se non ti chiamano entro 3 settimane, telefoni in sede.
           </p>
+          <div className="text-[11px] text-stone-600 pt-0.5">
+            Puoi andare alla visita in totale autonomia oppure farti accompagnare da un Tutor, se ne hai scelto uno.
+          </div>
           <div className="text-[11px] font-bold text-rose-700 space-y-0.5 pt-0.5">
             <div>📍 Via Taramelli 7: Mer e Sab 08:00–11:30 (sangue intero e visite).</div>
             <div>🏥 San Matteo (Pad. 12): visite Lun–Ven 09:00/10:00 · sangue intero Lun, Mar, Gio, Ven · aferesi Lun–Ven 08:00/11:00 e Sab 08:00/09:30 (Dom chiuso).</div>
@@ -4351,6 +4631,7 @@ function SchermataBonus({
   setStoricoBuoni,
   giochiStato,
   setGiochiStato,
+  oggiISO: oggiISOParent,
   modalitaSviluppatore,
   avatar,
   profilo,
@@ -4360,9 +4641,11 @@ function SchermataBonus({
   const [sottoTab, setSottoTab] = useState('premi'); // 'premi' | 'classifiche' | 'giochi'
   const [couponAttivo, setCouponAttivo] = useState(null);
 
-  // Stato di navigazione dei Minigiochi (dati giornalieri in giochiStato persistiti per oggiISO)
-  const [giocoAttivo, setGiocoAttivo] = useState('giornaliero'); // 'giornaliero' | 'verofalso' | 'compatibilita' | 'zaino' | 'parola' | 'memory'
-  const [offsetGiorniQuizDev, setOffsetGiorniQuizDev] = useState(0);
+  // Stato di navigazione dei Minigiochi (3 giochi al giorno con cambio a mezzanotte locale 00:00)
+  const [giocoAttivo, setGiocoAttivo] = useState('giornaliero');
+  const [offsetGiorniDev, setOffsetGiorniDev] = useState(0);
+  const [countdownMezzanotte, setCountdownMezzanotte] = useState(() => ottieniCountdownMezzanotte());
+  const [orologioOggiISO, setOrologioOggiISO] = useState(() => oggiISOParent || ottieniDataOggiISO());
   const [indiceGiornaliero, setIndiceGiornaliero] = useState(0);
   const [indiceVF, setIndiceVF] = useState(0);
   const [indiceCompat, setIndiceCompat] = useState(0);
@@ -4370,17 +4653,37 @@ function SchermataBonus({
   const [indiceParola, setIndiceParola] = useState(0);
   const [inputParola, setInputParola] = useState('');
 
-  const oggiISO = ottieniDataOggiISO();
-  const oggiLeggibile = new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
-  const puntiGiochiOggi = giochiStato?.data === oggiISO ? (giochiStato.puntiOggi || 0) : 0;
+  useEffect(() => {
+    if (oggiISOParent) setOrologioOggiISO(oggiISOParent);
+  }, [oggiISOParent]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdownMezzanotte(ottieniCountdownMezzanotte());
+      if (!oggiISOParent) {
+        const nuovaData = ottieniDataOggiISO();
+        setOrologioOggiISO((prev) => (prev === nuovaData ? prev : nuovaData));
+      }
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [oggiISOParent]);
+
+  const offsetAttivo = modalitaSviluppatore ? offsetGiorniDev : 0;
+  const dataGiochiISO = offsetAttivo === 0 ? orologioOggiISO : ottieniDataOggiISO(offsetAttivo);
+  const oggiLeggibile = calcolaDataTraGiorni(0, dataGiochiISO).leggibile;
+  const indiceGiorno = calcolaIndiceGiornoLocale(dataGiochiISO);
+  const isSetPari = ((indiceGiorno % 2) + 2) % 2 === 0;
+  const turnoSet = Math.floor(Math.abs(indiceGiorno) / 2);
+
+  const puntiGiochiOggi = giochiStato?.data === dataGiochiISO ? (giochiStato.puntiOggi || 0) : 0;
 
   const aggiornaStatoGiochi = (updater) => {
     setGiochiStato((prev) => {
       const base =
-        prev && prev.data === oggiISO
+        prev && prev.data === dataGiochiISO
           ? prev
           : {
-              data: oggiISO,
+              data: dataGiochiISO,
               puntiOggi: 0,
               rispGiornaliere: {},
               quizGiornoPremiato: false,
@@ -4500,25 +4803,28 @@ function SchermataBonus({
   const maxMediaArea = Math.max(...classificaMacroAree.map((a) => a.mediaPerStudente));
   const miaPosizioneArea = classificaMacroAree.findIndex((a) => a.isMio) + 1;
 
-  // --- DATI GIOCO 1: QUIZ DEL GIORNO LEGATO ALLA DATA REALE (+1 PT, +2 PT SE 3/3) ---
-  const databaseGiornaliero = [
-    { id: 'g1_1', g: 1, q: 'Qual è il 1° passo ufficiale su avis.pv.it per diventare donatore?', opts: ['Inviare la richiesta per la Visita di Idoneità', 'Presentarsi a caso senza visita', 'Pagare le analisi'], corr: 0 },
-    { id: 'g1_2', g: 1, q: 'In quanto tempo il corpo recupera la parte liquida (plasma)?', opts: ['In 30 giorni', 'In circa 24 ore', 'In 6 mesi'], corr: 1 },
-    { id: 'g1_3', g: 1, q: 'Qual è l\'età per candidarsi per la 1ª volta in AVIS?', opts: ['Dai 25 anni', 'Solo sotto i 30 anni', 'Tra 18 e 60 anni (peso > 50 kg)'], corr: 2 },
-
-    { id: 'g2_1', g: 2, q: 'Dove si trova la sede dell\'AVIS Comunale a Pavia?', opts: ['Via Taramelli 7, Pavia', 'Piazza della Vittoria', 'Castello Visconteo'], corr: 0 },
-    { id: 'g2_2', g: 2, q: 'A cosa serve il plasma raccolto con la plasmaferesi?', opts: ['Solo per idratare', 'A produrre farmaci salvavita (immunoglobuline, albumina)', 'Non viene usato'], corr: 1 },
-    { id: 'g2_3', g: 2, q: 'Secondo le regole di AVIS Pavia, qual è l\'intervallo tra due donazioni di sangue intero?', opts: ['30 giorni per tutti', '90 giorni per uomini (180 giorni per donne in età fertile)', 'Una volta ogni 2 anni'], corr: 1 },
-
-    { id: 'g3_1', g: 3, q: 'Secondo AVIS Pavia, quanto bisogna attendere dopo una donazione di plasma?', opts: ['120 giorni', '14 giorni (30 giorni invece da sangue intero a plasma)', '6 mesi'], corr: 1 },
-    { id: 'g3_2', g: 3, q: 'Cosa riceve il donatore gratuitamente dopo ogni visita e prelievo?', opts: ['Analisi ematochimiche complete gratuite', 'Solo un certificato cartaceo', 'Niente'], corr: 0 },
-    { id: 'g3_3', g: 3, q: 'Quanti ml di sangue intero vengono prelevati in una donazione standard?', opts: ['1,5 litri', '100 ml', '450 ml (± 10%)'], corr: 2 }
+  // --- DATI GIOCO 1 (SET A): QUIZ DEL GIORNO A ROTAZIONE GIORNALIERA (+1/+2 PT) ---
+  const poolQuizGiornaliero = [
+    { id: 'g1_1', q: 'Qual è il 1° passo ufficiale su avis.pv.it per diventare donatore?', opts: ['Inviare la richiesta per la Visita di Idoneità', 'Presentarsi a caso senza visita', 'Pagare le analisi'], corr: 0 },
+    { id: 'g1_2', q: 'In quanto tempo il corpo recupera la parte liquida (plasma)?', opts: ['In 30 giorni', 'In circa 24 ore', 'In 6 mesi'], corr: 1 },
+    { id: 'g1_3', q: 'Qual è l\'età per candidarsi per la 1ª volta in AVIS?', opts: ['Dai 25 anni', 'Solo sotto i 30 anni', 'Tra 18 e 60 anni (peso > 50 kg)'], corr: 2 },
+    { id: 'g2_1', q: 'Dove si trova la sede dell\'AVIS Comunale a Pavia?', opts: ['Via Taramelli 7, Pavia', 'Piazza della Vittoria', 'Castello Visconteo'], corr: 0 },
+    { id: 'g2_2', q: 'A cosa serve il plasma raccolto con la plasmaferesi?', opts: ['Solo per idratare', 'A produrre farmaci salvavita (immunoglobuline, albumina)', 'Non viene usato'], corr: 1 },
+    { id: 'g2_3', q: 'Secondo le regole di AVIS Pavia, qual è l\'intervallo tra due donazioni di sangue intero?', opts: ['30 giorni per tutti', '90 giorni per uomini (180 giorni per donne in età fertile)', 'Una volta ogni 2 anni'], corr: 1 },
+    { id: 'g3_1', q: 'Secondo AVIS Pavia, quanto bisogna attendere dopo una donazione di plasma?', opts: ['120 giorni', '14 giorni (30 giorni invece da sangue intero a plasma)', '6 mesi'], corr: 1 },
+    { id: 'g3_2', q: 'Cosa riceve il donatore gratuitamente dopo ogni visita e prelievo?', opts: ['Analisi ematochimiche complete gratuite', 'Solo un certificato cartaceo', 'Niente'], corr: 0 },
+    { id: 'g3_3', q: 'Quanti ml di sangue intero vengono prelevati in una donazione standard?', opts: ['1,5 litri', '100 ml', '450 ml (± 10%)'], corr: 2 },
+    { id: 'g4_1', q: 'Dove si trova il Centro Trasfusionale SIMT del Policlinico San Matteo?', opts: ['Viale Camillo Golgi 19 (Padiglione 12)', 'Corso Cavour 50', 'Piazza Petrarca'], corr: 0 },
+    { id: 'g4_2', q: 'Cosa conviene fare per colazione prima della visita o del prelievo?', opts: ['Colazione leggera evitando latte e latticini', 'Cappuccino abbondante e brioche alla crema', 'Digiuno totale inclusa l\'acqua'], corr: 0 },
+    { id: 'g4_3', q: 'Dopo un nuovo tatuaggio o piercing, quanto tempo di sospensione prevede AVIS?', opts: ['7 giorni', '4 mesi', '2 anni'], corr: 1 },
+    { id: 'g5_1', q: 'Qual è il peso corporeo minimo richiesto per poter donare in sicurezza?', opts: ['Almeno 50 kg', 'Almeno 65 kg', 'Non esiste un peso minimo'], corr: 0 },
+    { id: 'g5_2', q: 'Cosa si controlla rapidamente con una goccia dal dito prima della donazione?', opts: ['Il livello di emoglobina', 'Il gruppo sanguigno completo ogni volta', 'La vitamina D'], corr: 0 },
+    { id: 'g5_3', q: 'Perché è utile bere acqua prima di donare sangue o plasma?', opts: ['Aiuta pressione e idratazione rendendo il prelievo fluido', 'Non serve bere', 'Fa salire la febbre'], corr: 0 }
   ];
 
-  const giornoRealeIndex = (Math.floor(Date.now() / 86400000) + (modalitaSviluppatore ? offsetGiorniQuizDev : 0)) % 3 + 1;
-  const quizOggi = databaseGiornaliero.filter((x) => x.g === giornoRealeIndex);
-  const rispGiornaliere = giochiStato?.data === oggiISO ? (giochiStato.rispGiornaliere || {}) : {};
-  const quizGiornoPremiato = giochiStato?.data === oggiISO ? Boolean(giochiStato.quizGiornoPremiato) : false;
+  const quizOggi = selezionaElementiGiorno(poolQuizGiornaliero, 3, turnoSet);
+  const rispGiornaliere = giochiStato?.data === dataGiochiISO ? (giochiStato.rispGiornaliere || {}) : {};
+  const quizGiornoPremiato = giochiStato?.data === dataGiochiISO ? Boolean(giochiStato.quizGiornoPremiato) : false;
   const completatiOggi = quizOggi.every((x) => rispGiornaliere[x.id] !== undefined);
   const corretteOggiCount = quizOggi.filter((x) => rispGiornaliere[x.id] === x.corr).length;
 
@@ -4538,28 +4844,38 @@ function SchermataBonus({
       const premioQuiz = numCorrette === quizOggi.length ? 2 : 1;
       assegnaPuntiGioco(
         premioQuiz,
-        `Quiz del Giorno Completato (${numCorrette}/3) 🎯`,
+        `Quiz del Giorno Completato (${numCorrette}/${quizOggi.length}) 🎯`,
         numCorrette === quizOggi.length ? '+2 pt per averle azzeccate tutte!' : '+1 pt per aver completato il quiz!'
       );
     } else if (idx === q.corr) {
-      mostraNotifica('Risposta Esatta! ✓', 'Completa tutte e 3 le domande del giorno per ottenere i punti.', 0);
+      mostraNotifica('Risposta Esatta! ✓', 'Completa tutte e 3 le domande di oggi per ottenere i punti.', 0);
     } else {
       mostraNotifica('Risposta Errata', 'Nessun problema: il quiz serve per imparare insieme.', 0);
     }
   };
 
-  // --- DATI GIOCO 2: VERO O FALSO LAMPO (6 MITI, +1 PT AL COMPLETAMENTO) ---
-  const sfideVeroFalso = [
+  // --- DATI GIOCO 2 (SET B): VERO O FALSO LAMPO A ROTAZIONE (+1/+2 PT) ---
+  const poolVeroFalso = [
     { id: 'vf1', testo: 'Il sangue umano può essere prodotto artificialmente in laboratorio.', corr: 'Falso', spieg: 'Falso! La donazione volontaria è l\'unica fonte al mondo per il sangue.' },
     { id: 'vf2', testo: 'La Legge 219/2005 garantisce per legge la giustificazione automatica agli esami universitari.', corr: 'Falso', spieg: 'Falso: l\'art. 8 tutela i lavoratori dipendenti; per gli studenti chiedi l\'attestato AVIS e verifica col tuo corso di laurea.' },
     { id: 'vf3', testo: 'Su avis.pv.it prima della 1ª donazione fai sempre la Visita di Idoneità con esami gratuiti.', corr: 'Vero', spieg: 'Vero! Così verifichi i valori ematici in totale sicurezza.' },
     { id: 'vf4', testo: 'Donare il sangue fa ingrassare o abbassa il metabolismo.', corr: 'Falso', spieg: 'Falso! Aiuta invece a monitorare costantemente colesterolo e glicemia.' },
     { id: 'vf5', testo: 'Una sola donazione può aiutare fino a 3 pazienti diversi.', corr: 'Vero', spieg: 'Vero! Il sangue viene diviso in globuli rossi, plasma e piastrine.' },
-    { id: 'vf6', testo: 'Chi assume la pillola anticoncezionale non può mai donare il sangue.', corr: 'Falso', spieg: 'Falso! La pillola anticoncezionale è pienamente compatibile con la donazione.' }
+    { id: 'vf6', testo: 'Chi assume la pillola anticoncezionale non può mai donare il sangue.', corr: 'Falso', spieg: 'Falso! La pillola anticoncezionale è pienamente compatibile con la donazione.' },
+    { id: 'vf7', testo: 'Dopo un tatuaggio o un piercing bisogna attendere 4 mesi prima di donare.', corr: 'Vero', spieg: 'Vero! È una misura di sicurezza standard prevista dai protocolli AVIS.' },
+    { id: 'vf8', testo: 'Prima della visita o della donazione bisogna evitare anche di bere acqua.', corr: 'Falso', spieg: 'Falso! Bere acqua prima aiuta la circolazione e rende il prelievo più scorrevole.' },
+    { id: 'vf9', testo: 'Alla 1ª Visita di Idoneità vengono prelevati subito 450 ml di sangue intero.', corr: 'Falso', spieg: 'Falso! Al 1° incontro fai solo il colloquio medico e le provette delle analisi gratuite.' },
+    { id: 'vf10', testo: 'Tutto il materiale usato per ogni donatore è sempre sterile e rigorosamente monouso.', corr: 'Vero', spieg: 'Vero! Aghi e sacche vengono aperti sul momento e gettati dopo l\'uso.' },
+    { id: 'vf11', testo: 'Il peso corporeo minimo per donare il sangue è 50 kg.', corr: 'Vero', spieg: 'Vero! Garantisce che il volume prelevato sia del tutto sicuro per l\'organismo.' },
+    { id: 'vf12', testo: 'A Pavia puoi scegliere tra la sede AVIS in Via Taramelli 7 e il SIMT al San Matteo Pad. 12.', corr: 'Vero', spieg: 'Vero! Entrambe le sedi accolgono i donatori con orari dedicati.' },
+    { id: 'vf13', testo: 'Il gruppo 0 Rh negativo può donare globuli rossi in emergenza a tutti gli altri gruppi.', corr: 'Vero', spieg: 'Vero! Per questo i suoi globuli rossi sono preziosissimi nei reparti di urgenza.' },
+    { id: 'vf14', testo: 'Dopo una donazione di plasma bisogna attendere almeno 14 giorni prima della successiva.', corr: 'Vero', spieg: 'Vero! Il plasma si rigenera velocemente e l\'intervallo minimo di sicurezza è 14 giorni.' },
+    { id: 'vf15', testo: 'Il controllo delle analisi ematochimiche offerto ai donatori è completamente gratuito.', corr: 'Vero', spieg: 'Vero! Ricevi i referti comodi e senza costi dopo visita e donazioni.' }
   ];
 
-  const rispVeroFalso = giochiStato?.data === oggiISO ? (giochiStato.rispVF || {}) : {};
-  const vfPremiato = giochiStato?.data === oggiISO ? Boolean(giochiStato.vfPremiato) : false;
+  const sfideVeroFalso = selezionaElementiGiorno(poolVeroFalso, 5, turnoSet);
+  const rispVeroFalso = giochiStato?.data === dataGiochiISO ? (giochiStato.rispVF || {}) : {};
+  const vfPremiato = giochiStato?.data === dataGiochiISO ? Boolean(giochiStato.vfPremiato) : false;
   const vfCompletato = sfideVeroFalso.every((s) => rispVeroFalso[s.id] !== undefined);
   const vfCorretteCount = sfideVeroFalso.filter((s) => rispVeroFalso[s.id] === s.corr).length;
 
@@ -4576,24 +4892,35 @@ function SchermataBonus({
     }));
 
     if (tutteRisposte && !vfPremiato) {
-      if (numEsatte >= 4) {
-        assegnaPuntiGioco(1, `Vero/Falso Completato (${numEsatte}/6) ⚡`, '+1 pt guadagnato!');
+      if (numEsatte === sfideVeroFalso.length) {
+        assegnaPuntiGioco(2, `Vero/Falso En Plein (${numEsatte}/${sfideVeroFalso.length}) ⚡`, '+2 pt guadagnati!');
+      } else if (numEsatte >= 3) {
+        assegnaPuntiGioco(1, `Vero/Falso Completato (${numEsatte}/${sfideVeroFalso.length}) ⚡`, '+1 pt guadagnato!');
       } else {
-        mostraNotifica(`Vero/Falso Completato (${numEsatte}/6)`, 'Servono almeno 4 risposte corrette per ottenere +1 pt.', 0);
+        mostraNotifica(`Vero/Falso Completato (${numEsatte}/${sfideVeroFalso.length})`, 'Servono almeno 3 risposte corrette per ottenere +1 pt.', 0);
       }
     }
   };
 
-  // --- DATI GIOCO 3: COMPATIBILITA GRUPPI SANGUIGNI (+1 PT AL COMPLETAMENTO) ---
-  const casiCompatibilita = [
+  // --- DATI GIOCO 3 (SET B): COMPATIBILITA GRUPPI SANGUIGNI A ROTAZIONE (+1/+2 PT) ---
+  const poolCompatibilita = [
     { id: 'c1', domanda: 'Un paziente in emergenza ha gruppo A+ e servono globuli rossi urgenti. Quale gruppo può donare sempre a tutti in emergenza?', opts: ['0 Rh- (Donatore Universale)', 'AB+ (Ricevitore)', 'Solo B-'], corr: 0 },
     { id: 'c2', domanda: 'Chi ha gruppo AB+ viene chiamato "Ricevitore Universale" di globuli rossi. Da chi può ricevere?', opts: ['Solo da AB+', 'Da qualsiasi gruppo (0, A, B, AB)', 'Solo da 0-'], corr: 1 },
     { id: 'c3', domanda: 'Invece per il PLASMA (parte liquida), qual è il donatore universale?', opts: ['Gruppo AB (non ha anticorpi anti-A né anti-B)', 'Gruppo 0-', 'Nessuno'], corr: 0 },
-    { id: 'c4', domanda: 'Uno studente scopre di avere gruppo 0+. A quali gruppi Rh positivi può donare globuli rossi?', opts: ['Solo a 0+', 'Solo ad AB+', 'A tutti i gruppi positivi (0+, A+, B+, AB+)'], corr: 2 }
+    { id: 'c4', domanda: 'Uno studente scopre di avere gruppo 0+. A quali gruppi Rh positivi può donare globuli rossi?', opts: ['Solo a 0+', 'Solo ad AB+', 'A tutti i gruppi positivi (0+, A+, B+, AB+)'], corr: 2 },
+    { id: 'c5', domanda: 'Se una persona ha gruppo 0 Rh-, da quali donatori può ricevere globuli rossi in sicurezza?', opts: ['Da qualsiasi gruppo negativo', 'Esclusivamente dal gruppo 0 Rh-', 'Da A- e B-'], corr: 1 },
+    { id: 'c6', domanda: 'Un paziente con gruppo A+ necessita di una trasfusione di globuli rossi: quali gruppi sono compatibili?', opts: ['Solo A+ e 0+', 'A+, A-, 0+, 0-', 'Qualsiasi gruppo B'], corr: 1 },
+    { id: 'c7', domanda: 'Uno studente di gruppo B- dona globuli rossi: a quali gruppi può salvar la vita?', opts: ['B-, B+, AB-, AB+', 'Solo a B-', 'A tutti tranne AB+'], corr: 0 },
+    { id: 'c8', domanda: 'Perché il plasma di gruppo 0 non è universale quanto quello AB?', opts: ['Contiene sia anticorpi anti-A che anti-B', 'Non contiene acqua', 'Si coagula all\'aria'], corr: 0 },
+    { id: 'c9', domanda: 'Dopo il prelievo di sangue intero, in quante componenti principali viene lavorata la sacca?', opts: ['1 sola componente unica', '3 componenti (globuli rossi, plasma, piastrine)', '10 componenti'], corr: 1 },
+    { id: 'c10', domanda: 'Quale componente ematico ha la durata di conservazione più breve (circa 5–7 giorni)?', opts: ['Le piastrine', 'Il plasma congelato', 'L\'acqua fisiologica'], corr: 0 },
+    { id: 'c11', domanda: 'Cosa indica il segno "+" oppure "-" accanto al gruppo sanguigno (es. A+ o A-)?', opts: ['La presenza o assenza dell\'antigene Rh (D)', 'Il livello di ferro nel sangue', 'La pressione arteriosa'], corr: 0 },
+    { id: 'c12', domanda: 'Un ricevente di gruppo AB- da quali donatori può ricevere globuli rossi?', opts: ['Solo da AB-', 'Da tutti i gruppi Rh negativi (0-, A-, B-, AB-)', 'Solo da 0+'], corr: 1 }
   ];
 
-  const rispCompatibilita = giochiStato?.data === oggiISO ? (giochiStato.rispCompat || {}) : {};
-  const compatPremiato = giochiStato?.data === oggiISO ? Boolean(giochiStato.compatPremiato) : false;
+  const casiCompatibilita = selezionaElementiGiorno(poolCompatibilita, 4, turnoSet);
+  const rispCompatibilita = giochiStato?.data === dataGiochiISO ? (giochiStato.rispCompat || {}) : {};
+  const compatPremiato = giochiStato?.data === dataGiochiISO ? Boolean(giochiStato.compatPremiato) : false;
   const compatCompletato = casiCompatibilita.every((c) => rispCompatibilita[c.id] !== undefined);
   const compatCorretteCount = casiCompatibilita.filter((c) => rispCompatibilita[c.id] === c.corr).length;
 
@@ -4610,26 +4937,65 @@ function SchermataBonus({
     }));
 
     if (tuttiRisolti && !compatPremiato) {
-      if (numEsatti >= 3) {
-        assegnaPuntiGioco(1, `Casi Gruppi Completati (${numEsatti}/4) 🩸`, '+1 pt guadagnato!');
+      if (numEsatti === casiCompatibilita.length) {
+        assegnaPuntiGioco(2, `Casi Gruppi En Plein (${numEsatti}/${casiCompatibilita.length}) 🩸`, '+2 pt guadagnati!');
+      } else if (numEsatti >= 3) {
+        assegnaPuntiGioco(1, `Casi Gruppi Completati (${numEsatti}/${casiCompatibilita.length}) 🩸`, '+1 pt guadagnato!');
       } else {
-        mostraNotifica(`Casi Gruppi Completati (${numEsatti}/4)`, 'Servono almeno 3 risposte corrette per ottenere +1 pt.', 0);
+        mostraNotifica(`Casi Gruppi Completati (${numEsatti}/${casiCompatibilita.length})`, 'Servono almeno 3 risposte corrette per ottenere +1 pt.', 0);
       }
     }
   };
 
-  // --- DATI GIOCO 4: PREPARA LO ZAINO PER LA VISITA AVIS (+2 PT) ---
-  const oggettiZaino = [
-    { id: 'z1', label: '🪪 Tessera Sanitaria & Documento', giusto: true },
-    { id: 'z2', label: '🥛 Bottiglione di Latte Intero', giusto: false },
-    { id: 'z3', label: '💧 Bottiglietta d\'Acqua (500 ml)', giusto: true },
-    { id: 'z4', label: '🥐 Fette Biscottate / Frutta', giusto: true },
-    { id: 'z5', label: '💊 Aspirina presa stamattina', giusto: false },
-    { id: 'z6', label: '👕 Maglietta a maniche comode', giusto: true },
-    { id: 'z7', label: '🏋️ Pesi da 10 kg per allenarsi subito', giusto: false }
+  // --- DATI GIOCO 4 (SET A): PREPARA LO ZAINO CON SCENARI A ROTAZIONE (+2 PT) ---
+  const scenariZaino = [
+    {
+      id: 'zaino_visita',
+      titolo: 'Prepara lo Zaino: 1ª Visita AVIS',
+      consegna: 'Seleziona i 4 oggetti utili ed evita i 3 sbagliati prima di uscire di casa.',
+      oggetti: [
+        { id: 'z1_1', label: '🪪 Tessera Sanitaria & Documento', giusto: true },
+        { id: 'z1_2', label: '🥛 Cappuccino con Latte Intero', giusto: false },
+        { id: 'z1_3', label: '💧 Bottiglietta d\'Acqua (500 ml)', giusto: true },
+        { id: 'z1_4', label: '🥐 Fette Biscottate / Frutta', giusto: true },
+        { id: 'z1_5', label: '💊 Antinfiammatorio preso stamattina', giusto: false },
+        { id: 'z1_6', label: '👕 Maglietta a maniche comode', giusto: true },
+        { id: 'z1_7', label: '🏋️ Pesi da 10 kg per allenarsi subito', giusto: false }
+      ]
+    },
+    {
+      id: 'zaino_colazione',
+      titolo: 'Colazione Pre-Prelievo al Bar',
+      consegna: 'Scegli i 4 alimenti adatti al prelievo ed evita i 3 sconsigliati.',
+      oggetti: [
+        { id: 'z2_1', label: '☕ Caffè o tè poco zuccherato', giusto: true },
+        { id: 'z2_2', label: '🥛 Bicchiere di latte intero', giusto: false },
+        { id: 'z2_3', label: '🍞 Fette biscottate con marmellata', giusto: true },
+        { id: 'z2_4', label: '🍊 Spremuta d\'arancia o frutto fresco', giusto: true },
+        { id: 'z2_5', label: '🥐 Cornetto ripieno di crema al burro', giusto: false },
+        { id: 'z2_6', label: '💧 Bicchiere d\'acqua naturale', giusto: true },
+        { id: 'z2_7', label: '🥓 Uova strapazzate e pancetta', giusto: false }
+      ]
+    },
+    {
+      id: 'zaino_post',
+      titolo: 'Dopo la Donazione in Giornata di Studio',
+      consegna: 'Seleziona i 4 comportamenti corretti dopo il prelievo ed evita i 3 errori.',
+      oggetti: [
+        { id: 'z3_1', label: '🪑 Sosta di 10 minuti in sala ristoro', giusto: true },
+        { id: 'z3_2', label: '🏃 Corsa intensa subito dopo il prelievo', giusto: false },
+        { id: 'z3_3', label: '🥐 Colazione leggera offerta da AVIS', giusto: true },
+        { id: 'z3_4', label: '💧 Bere acqua durante tutta la giornata', giusto: true },
+        { id: 'z3_5', label: '🍽️ Saltare completamente il pranzo', giusto: false },
+        { id: 'z3_6', label: '📚 Studio leggero senza sforzi estremi', giusto: true },
+        { id: 'z3_7', label: '🚬 Fumare appena usciti dalla sede', giusto: false }
+      ]
+    }
   ];
 
-  const zainoCompletato = giochiStato?.data === oggiISO ? Boolean(giochiStato.zainoCompletato) : false;
+  const scenarioZainoOggi = scenariZaino[turnoSet % scenariZaino.length];
+  const oggettiZaino = mescolaConSeme(scenarioZainoOggi.oggetti, turnoSet + 7);
+  const zainoCompletato = giochiStato?.data === dataGiochiISO ? Boolean(giochiStato.zainoCompletato) : false;
 
   const toggleZaino = (item) => {
     if (zainoCompletato) return;
@@ -4647,25 +5013,33 @@ function SchermataBonus({
 
     if (tuttoGiusto) {
       aggiornaStatoGiochi((st) => ({ ...st, zainoCompletato: true }));
-      assegnaPuntiGioco(2, 'Zaino Perfetto! 🎒', '+2 Punti! Tutto pronto per la visita in AVIS.');
+      assegnaPuntiGioco(2, 'Sfida Zaino Perfetta! 🎒', '+2 Punti! Tutto pronto per il percorso AVIS.');
     } else {
-      mostraNotifica('Controlla lo Zaino!', 'Servono i 4 oggetti utili ed evitare latte, aspirina o pesi!', 0);
+      mostraNotifica('Controlla le scelte!', 'Seleziona esattamente i 4 elementi corretti ed evita i 3 sbagliati.', 0);
     }
   };
 
-  // --- DATI GIOCO 5: PAROLA MISTERIOSA EMATICA (+1 PT A PAROLA) ---
-  const paroleMisteriose = [
+  // --- DATI GIOCO 5 (SET A): PAROLA MISTERIOSA EMATICA (2 PAROLE/GIORNO, +1 PT CIASCUNA) ---
+  const poolParoleMisteriose = [
     { parola: 'PLASMA', indizio: 'La componente liquida giallognola del sangue che si recupera in 24 ore (6 lettere)' },
     { parola: 'FERRITINA', indizio: 'La proteina che immagazzina il ferro nel nostro corpo (9 lettere)' },
     { parola: 'TARAMELLI', indizio: 'Il nome della via di Pavia dove ha sede l\'AVIS Comunale al civico 7 (9 lettere)' },
-    { parola: 'IDONEITA', indizio: 'La visita medica iniziale con esami gratuiti prima della 1ª donazione (8 lettere)' }
+    { parola: 'IDONEITA', indizio: 'La visita medica iniziale con esami gratuiti prima della 1ª donazione (8 lettere)' },
+    { parola: 'PIASTRINE', indizio: 'Le cellule del sangue fondamentali per la coagulazione (9 lettere)' },
+    { parola: 'EMOGLOBINA', indizio: 'La proteina nei globuli rossi che trasporta l\'ossigeno (10 lettere)' },
+    { parola: 'DONATORE', indizio: 'Chi sceglie volontariamente e gratuitamente di donare il sangue (8 lettere)' },
+    { parola: 'GOLGI', indizio: 'Il viale del Policlinico San Matteo al civico 19 (5 lettere)' },
+    { parola: 'GLOBULI', indizio: 'Quelli rossi trasportano ossigeno e si recuperano in poche settimane (7 lettere)' },
+    { parola: 'AFERESI', indizio: 'La tecnica per donare solo plasma o piastrine con intervallo di 14 giorni (7 lettere)' }
   ];
 
-  const paroleIndovinate = giochiStato?.data === oggiISO ? (giochiStato.paroleIndovinate || {}) : {};
-  const parolaAttuale = paroleMisteriose[indiceParola];
+  const paroleOggi = selezionaElementiGiorno(poolParoleMisteriose, 2, turnoSet);
+  const paroleIndovinate = giochiStato?.data === dataGiochiISO ? (giochiStato.paroleIndovinate || {}) : {};
+  const parolaAttuale = paroleOggi[indiceParola] || paroleOggi[0];
+  const paroleTutteIndovinate = paroleOggi.every((p) => Boolean(paroleIndovinate[p.parola]));
 
   const verificaParola = () => {
-    if (paroleIndovinate[parolaAttuale.parola]) return;
+    if (!parolaAttuale || paroleIndovinate[parolaAttuale.parola]) return;
     if (normalizzaTestoConfronto(inputParola) === parolaAttuale.parola) {
       aggiornaStatoGiochi((st) => ({
         ...st,
@@ -4678,22 +5052,78 @@ function SchermataBonus({
     }
   };
 
-  // --- DATI GIOCO 6: MEMORY EMATICO (+2 PT, 1 VOLTA AL GIORNO) ---
-  const carteIniziali = [
-    { id: 1, coppiaId: '0neg', label: '0 Rh-' },
-    { id: 2, coppiaId: '0neg', label: 'Donatore Univ.' },
-    { id: 3, coppiaId: 'abpos', label: 'AB Rh+' },
-    { id: 4, coppiaId: 'abpos', label: 'Ricevitore Univ.' },
-    { id: 5, coppiaId: 'plasma', label: 'Plasma' },
-    { id: 6, coppiaId: 'plasma', label: 'Recupero 24h' },
-    { id: 7, coppiaId: 'visita', label: '1° Passo AVIS' },
-    { id: 8, coppiaId: 'visita', label: 'Visita Idoneità' }
+  // --- DATI GIOCO 6 (SET B): MEMORY EMATICO CON COPPIE A ROTAZIONE (+2 PT) ---
+  const poolCoppieMemory = [
+    { coppiaId: '0neg', a: '0 Rh-', b: 'Donatore Univ.' },
+    { coppiaId: 'abpos', a: 'AB Rh+', b: 'Ricevitore Univ.' },
+    { coppiaId: 'plasma', a: 'Plasma', b: 'Recupero 24h' },
+    { coppiaId: 'visita', a: '1° Passo AVIS', b: 'Visita Idoneità' },
+    { coppiaId: 'taramelli', a: 'AVIS Pavia', b: 'Via Taramelli 7' },
+    { coppiaId: 'sanmatteo', a: 'San Matteo SIMT', b: 'Padiglione 12' },
+    { coppiaId: 'volume', a: 'Sangue Intero', b: '450 ml std' },
+    { coppiaId: 'peso', a: 'Requisito Min.', b: 'Peso >= 50 kg' },
+    { coppiaId: 'plasmaab', a: 'Plasma Univ.', b: 'Gruppo AB' },
+    { coppiaId: 'trepazienti', a: '1 Donazione', b: 'Fino a 3 pazienti' },
+    { coppiaId: 'intervallo90', a: 'Uomini / Donna', b: '90g / 180g' },
+    { coppiaId: 'tatuaggio4m', a: 'Nuovo Tatuaggio', b: 'Stop 4 mesi' }
   ];
 
-  const [carte, setCarte] = useState(() => mescolaCarte(carteIniziali));
+  const coppieOggi = selezionaElementiGiorno(poolCoppieMemory, 4, turnoSet);
+  const creaCarteGiorno = () =>
+    coppieOggi.flatMap((p, idx) => [
+      { id: idx * 2 + 1, coppiaId: p.coppiaId, label: p.a },
+      { id: idx * 2 + 2, coppiaId: p.coppiaId, label: p.b }
+    ]);
+
+  const [carte, setCarte] = useState(() => mescolaCarte(creaCarteGiorno()));
   const [scoperte, setScoperte] = useState([]);
   const [indovinate, setIndovinate] = useState([]);
-  const memoryPremiato = giochiStato?.data === oggiISO ? Boolean(giochiStato.memoryPremiato) : false;
+  const memoryPremiato = giochiStato?.data === dataGiochiISO ? Boolean(giochiStato.memoryPremiato) : false;
+
+  const giochiDelGiorno = isSetPari
+    ? [
+        { id: 'giornaliero', label: '🎯 Quiz Oggi', infoPt: '+2 pt' },
+        { id: 'zaino', label: '🎒 Zaino AVIS', infoPt: '+2 pt' },
+        { id: 'parola', label: '🔤 Parola', infoPt: '+2 pt' }
+      ]
+    : [
+        { id: 'verofalso', label: '⚡ Vero/Falso', infoPt: '+2 pt' },
+        { id: 'compatibilita', label: '🩸 Gruppi', infoPt: '+2 pt' },
+        { id: 'memory', label: '🃏 Memory', infoPt: '+2 pt' }
+      ];
+
+  const giocoCorrenteId = giochiDelGiorno.some((g) => g.id === giocoAttivo) ? giocoAttivo : giochiDelGiorno[0].id;
+
+  const isGiocoCompletato = (idGioco) => {
+    if (idGioco === 'giornaliero') return quizGiornoPremiato;
+    if (idGioco === 'zaino') return zainoCompletato;
+    if (idGioco === 'parola') return paroleTutteIndovinate;
+    if (idGioco === 'verofalso') return vfPremiato;
+    if (idGioco === 'compatibilita') return compatPremiato;
+    if (idGioco === 'memory') return memoryPremiato;
+    return false;
+  };
+
+  useEffect(() => {
+    setIndiceGiornaliero(0);
+    setIndiceVF(0);
+    setIndiceCompat(0);
+    setZainoScelti([]);
+    setIndiceParola(0);
+    setInputParola('');
+    setScoperte([]);
+    setIndovinate([]);
+    const nuoveCoppie = selezionaElementiGiorno(poolCoppieMemory, 4, turnoSet);
+    const mazzoNuovo = nuoveCoppie.flatMap((p, idx) => [
+      { id: idx * 2 + 1, coppiaId: p.coppiaId, label: p.a },
+      { id: idx * 2 + 2, coppiaId: p.coppiaId, label: p.b }
+    ]);
+    setCarte(mescolaCarte(mazzoNuovo));
+    setGiocoAttivo((prev) => {
+      const attivi = isSetPari ? ['giornaliero', 'zaino', 'parola'] : ['verofalso', 'compatibilita', 'memory'];
+      return attivi.includes(prev) ? prev : attivi[0];
+    });
+  }, [dataGiochiISO, isSetPari, turnoSet]);
 
   const giraCarta = (c) => {
     if (scoperte.length === 2 || scoperte.includes(c.id) || indovinate.includes(c.coppiaId)) return;
@@ -4740,10 +5170,10 @@ function SchermataBonus({
       </div>
 
       {/* 3 SOTTOSCHEDE CHIARE */}
-      <div className="flex bg-stone-100 p-1 rounded-2xl border border-stone-200 text-xs font-bold">
+      <div className="flex bg-stone-100 p-1 rounded-2xl border border-stone-200 text-[11px] sm:text-xs font-bold">
         <button
           onClick={() => setSottoTab('premi')}
-          className={`flex-1 py-2 rounded-xl transition ${
+          className={`flex-1 py-2 px-1 rounded-xl whitespace-nowrap transition ${
             sottoTab === 'premi' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
           }`}
         >
@@ -4751,7 +5181,7 @@ function SchermataBonus({
         </button>
         <button
           onClick={() => setSottoTab('classifiche')}
-          className={`flex-1 py-2 rounded-xl transition ${
+          className={`flex-1 py-2 px-1 rounded-xl whitespace-nowrap transition ${
             sottoTab === 'classifiche' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
           }`}
         >
@@ -4759,7 +5189,7 @@ function SchermataBonus({
         </button>
         <button
           onClick={() => setSottoTab('giochi')}
-          className={`flex-1 py-2 rounded-xl transition ${
+          className={`flex-1 py-2 px-1 rounded-xl whitespace-nowrap transition ${
             sottoTab === 'giochi' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
           }`}
         >
@@ -4770,6 +5200,23 @@ function SchermataBonus({
       {/* TAB 1: RINGRAZIAMENTI DI PAVIA */}
       {sottoTab === 'premi' && (
         <div className="space-y-3">
+          {storicoBuoni.length > 0 && (
+            <div className="bg-white rounded-3xl p-4 border-2 border-emerald-300 shadow-sm space-y-2">
+              <h4 className="text-xs font-black text-emerald-950">🧾 I tuoi Buoni Riscattati</h4>
+              <div className="space-y-1.5">
+                {storicoBuoni.map((b) => (
+                  <div key={b.txId} className="p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl text-[11px] flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-black text-emerald-950 block truncate">{b.titolo}</span>
+                      <span className="text-[10px] text-emerald-800 block">{b.txId} · {b.orario}</span>
+                    </div>
+                    <span className="font-black text-emerald-700 shrink-0">✓ Usato</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-amber-50/80 rounded-3xl p-4 border border-amber-200/90 space-y-1 text-xs">
             <div className="font-black text-amber-950">💛 Ringraziamenti da Pavia</div>
             <p className="text-[11px] text-amber-900/90 leading-snug">
@@ -4805,23 +5252,6 @@ function SchermataBonus({
               </div>
             );
           })}
-
-          {storicoBuoni.length > 0 && (
-            <div className="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm space-y-2">
-              <h4 className="text-xs font-black text-stone-900">🧾 Buoni Convalidati</h4>
-              <div className="space-y-1.5">
-                {storicoBuoni.map((b) => (
-                  <div key={b.txId} className="p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl text-[11px] flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <span className="font-black text-emerald-950 block truncate">{b.titolo}</span>
-                      <span className="text-[10px] text-emerald-800 block">{b.txId} · {b.orario}</span>
-                    </div>
-                    <span className="font-black text-emerald-700 shrink-0">✓ Usato</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -4864,25 +5294,25 @@ function SchermataBonus({
                 ❓ Come fai salire la media della tua Macro-Area?
               </span>
               <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                <div className="bg-white px-2.5 py-2 rounded-xl border border-stone-200/80 flex items-center justify-between gap-1">
-                  <span className="font-bold text-stone-700 truncate">🩸 Donazione AVIS</span>
-                  <span className="font-black text-rose-600 shrink-0">+100 pt</span>
+                <div className="bg-white px-3 py-2 rounded-xl border border-stone-200/80 flex flex-col gap-0.5">
+                  <span className="font-bold text-stone-700">🩸 Donazione AVIS</span>
+                  <span className="font-black text-rose-600">+100 pt</span>
                 </div>
-                <div className="bg-white px-2.5 py-2 rounded-xl border border-stone-200/80 flex items-center justify-between gap-1">
-                  <span className="font-bold text-stone-700 truncate">🏥 Visita AVIS</span>
-                  <span className="font-black text-emerald-700 shrink-0">+40 pt</span>
+                <div className="bg-white px-3 py-2 rounded-xl border border-stone-200/80 flex flex-col gap-0.5">
+                  <span className="font-bold text-stone-700">🏥 Visita AVIS</span>
+                  <span className="font-black text-emerald-700">+40 pt</span>
                 </div>
-                <div className="bg-white px-2.5 py-2 rounded-xl border border-stone-200/80 flex items-center justify-between gap-1">
-                  <span className="font-bold text-stone-700 truncate">🤝 Tutor AVIS</span>
-                  <span className="font-black text-amber-700 shrink-0">+35 pt</span>
+                <div className="bg-white px-3 py-2 rounded-xl border border-stone-200/80 flex flex-col gap-0.5">
+                  <span className="font-bold text-stone-700">🤝 Tutor AVIS</span>
+                  <span className="font-black text-amber-700">+35 pt</span>
                 </div>
-                <div className="bg-white px-2.5 py-2 rounded-xl border border-stone-200/80 flex items-center justify-between gap-1">
-                  <span className="font-bold text-stone-700 truncate">🎮 Minigiochi</span>
-                  <span className="font-black text-stone-800 shrink-0">1–2 pt (max 6/g)</span>
+                <div className="bg-white px-3 py-2 rounded-xl border border-stone-200/80 flex flex-col gap-0.5">
+                  <span className="font-bold text-stone-700">🎮 Minigiochi</span>
+                  <span className="font-black text-stone-800">1–2 pt (max 6/g)</span>
                 </div>
               </div>
               <p className="text-[10px] text-stone-500 leading-snug">
-                Classifica basata sulla media per studente attivo: riscattare premi non riduce il punteggio della tua area.
+                Media per studente attivo: usare i punti per i premi non riduce il punteggio dell'area.
               </p>
             </div>
           </div>
@@ -4970,13 +5400,13 @@ function SchermataBonus({
         </div>
       )}
 
-      {/* TAB 3: MINIGIOCHI INTERATTIVI (1-2 PT + TETTO 6 PT/GIORNO) */}
+      {/* TAB 3: 3 MINIGIOCHI DEL GIORNO CON CAMBIO AUTOMATICO ALLE 00:00 */}
       {sottoTab === 'giochi' && (
         <div className="space-y-3">
-          {/* Barra Tetto Giornaliero */}
+          {/* Barra Tetto Giornaliero + Cambio 00:00 */}
           <div className="bg-white rounded-3xl p-3.5 border border-stone-200/80 shadow-sm space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-black text-stone-900">🎮 Punti giochi oggi</span>
+              <span className="font-black text-stone-900">🎮 Minigiochi</span>
               <span className={`font-black px-2 py-0.5 rounded-lg ${
                 puntiGiochiOggi >= MAX_PUNTI_GIOCHI_GIORNO
                   ? 'bg-amber-100 text-amber-900'
@@ -4991,37 +5421,50 @@ function SchermataBonus({
                 style={{ width: `${Math.min(100, Math.round((puntiGiochiOggi / MAX_PUNTI_GIOCHI_GIORNO) * 100))}%` }}
               />
             </div>
-            <p className="text-[10px] text-stone-500 leading-snug">
-              I minigiochi servono per imparare (1–2 pt, max {MAX_PUNTI_GIOCHI_GIORNO} pt al giorno): il vero salto arriva con <strong>Visita (+40 pt)</strong> e <strong>Donazione (+100 pt)</strong>.
-            </p>
+            <div className="flex items-center justify-between gap-2 text-[10px] text-stone-500">
+              <span>🌙 Nuovi 3 giochi alle 00:00 (tra {countdownMezzanotte})</span>
+              {modalitaSviluppatore && (
+                <button
+                  type="button"
+                  onClick={() => setOffsetGiorniDev((d) => d + 1)}
+                  className="font-black text-rose-600 underline shrink-0"
+                >
+                  [DEV] +1g (00:00) →
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Griglia 3x2: tutti i minigiochi visibili subito senza dover scorrere */}
-          <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-            {[
-              { id: 'giornaliero', label: '🎯 Quiz Oggi' },
-              { id: 'verofalso', label: '⚡ Vero/Falso' },
-              { id: 'compatibilita', label: '🩸 Gruppi' },
-              { id: 'zaino', label: '🎒 Zaino AVIS' },
-              { id: 'parola', label: '🔤 Parola' },
-              { id: 'memory', label: '🃏 Memory' }
-            ].map((g) => (
-              <button
-                key={g.id}
-                onClick={() => setGiocoAttivo(g.id)}
-                className={`py-2.5 px-1.5 rounded-xl font-bold border text-center truncate transition ${
-                  giocoAttivo === g.id
-                    ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
-                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
+          {/* 3 Minigiochi attivi oggi */}
+          <div className="grid grid-cols-3 gap-2 text-[11px]">
+            {giochiDelGiorno.map((g) => {
+              const attivo = giocoCorrenteId === g.id;
+              const completato = isGiocoCompletato(g.id);
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setGiocoAttivo(g.id)}
+                  className={`py-2.5 px-2 rounded-2xl border text-center transition ${
+                    attivo
+                      ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                      : completato
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100/70'
+                      : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                  }`}
+                >
+                  <span className="font-black block leading-tight">{g.label}</span>
+                  <span className={`text-[9px] font-bold block mt-0.5 ${
+                    attivo ? 'text-stone-300' : completato ? 'text-emerald-700' : 'text-stone-400'
+                  }`}>
+                    {completato ? '✓ Fatto' : g.infoPt}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* GIOCO 1: QUIZ DEL GIORNO LEGATO ALLA DATA REALE */}
-          {giocoAttivo === 'giornaliero' && (() => {
+          {/* GIOCO 1 (SET A): QUIZ DEL GIORNO LEGATO ALLA DATA REALE */}
+          {giocoCorrenteId === 'giornaliero' && (() => {
             const q = quizOggi[indiceGiornaliero] || quizOggi[0];
             const scelto = rispGiornaliere[q.id];
             const giaFatto = scelto !== undefined;
@@ -5031,17 +5474,6 @@ function SchermataBonus({
                   <span className="text-xs font-black text-stone-800">
                     Quiz del {oggiLeggibile} (+1 pt · +2 pt se 3/3)
                   </span>
-                  {modalitaSviluppatore && (
-                    <button
-                      onClick={() => {
-                        setOffsetGiorniQuizDev((d) => (d + 1) % 3);
-                        setIndiceGiornaliero(0);
-                      }}
-                      className="text-[11px] font-bold text-rose-600 underline"
-                    >
-                      [DEV] Giorno successivo →
-                    </button>
-                  )}
                 </div>
 
                 <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/80 shadow-sm space-y-3.5">
@@ -5129,21 +5561,16 @@ function SchermataBonus({
                 }`}>
                   <span className="font-black block">
                     {quizGiornoPremiato
-                      ? `✓ Quiz del giorno completato (${corretteOggiCount}/3 esatte)`
+                      ? `✓ Quiz del giorno completato (${corretteOggiCount}/${quizOggi.length} esatte)`
                       : `Completa le 3 domande di oggi (${oggiLeggibile})`}
-                  </span>
-                  <span className="text-[11px]">
-                    {quizGiornoPremiato
-                      ? 'Torna domani per le nuove domande del giorno.'
-                      : 'Assegna +1 pt al completamento (o +2 pt con 3/3 risposte esatte).'}
                   </span>
                 </div>
               </div>
             );
           })()}
 
-          {/* GIOCO 2: VERO O FALSO PROGRESSIVO (+1 PT AL COMPLETAMENTO) */}
-          {giocoAttivo === 'verofalso' && (() => {
+          {/* GIOCO 2 (SET B): VERO O FALSO PROGRESSIVO (+1/+2 PT) */}
+          {giocoCorrenteId === 'verofalso' && (() => {
             const item = sfideVeroFalso[indiceVF] || sfideVeroFalso[0];
             const risp = rispVeroFalso[item.id];
             return (
@@ -5191,7 +5618,7 @@ function SchermataBonus({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
-                      Vero / Falso • +1 pt (6 sfide)
+                      Vero / Falso · +1/+2 pt (5 sfide)
                     </span>
                     <span className="text-[10px] font-bold text-stone-400">
                       Sfida {indiceVF + 1} di {sfideVeroFalso.length}
@@ -5243,17 +5670,17 @@ function SchermataBonus({
 
                 {vfCompletato && (
                   <div className={`p-3 rounded-2xl border text-[11px] font-bold ${
-                    vfCorretteCount >= 4 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-stone-50 border-stone-200 text-stone-700'
+                    vfCorretteCount >= 3 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-stone-50 border-stone-200 text-stone-700'
                   }`}>
-                    Hai completato le 6 sfide con {vfCorretteCount}/6 risposte corrette{vfCorretteCount >= 4 ? ' (+1 pt).' : ' (servono almeno 4/6 per +1 pt).'}
+                    Completate le 5 sfide con {vfCorretteCount}/5 risposte corrette{vfCorretteCount === 5 ? ' (+2 pt).' : vfCorretteCount >= 3 ? ' (+1 pt).' : ' (servono almeno 3/5 per +1 pt).'}
                   </div>
                 )}
               </div>
             );
           })()}
 
-          {/* GIOCO 3: COMPATIBILITÀ GRUPPI SANGUIGNI PROGRESSIVO (+1 PT AL COMPLETAMENTO) */}
-          {giocoAttivo === 'compatibilita' && (() => {
+          {/* GIOCO 3 (SET B): COMPATIBILITÀ GRUPPI SANGUIGNI PROGRESSIVO (+1/+2 PT) */}
+          {giocoCorrenteId === 'compatibilita' && (() => {
             const c = casiCompatibilita[indiceCompat] || casiCompatibilita[0];
             const risp = rispCompatibilita[c.id];
             const fatto = risp !== undefined;
@@ -5302,7 +5729,7 @@ function SchermataBonus({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
-                      Caso Clinico • +1 pt (4 casi)
+                      Caso Clinico · +1/+2 pt (4 casi)
                     </span>
                     <span className="text-[10px] font-bold text-stone-400">
                       Caso {indiceCompat + 1} di {casiCompatibilita.length}
@@ -5345,22 +5772,22 @@ function SchermataBonus({
                   <div className={`p-3 rounded-2xl border text-[11px] font-bold ${
                     compatCorretteCount >= 3 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-stone-50 border-stone-200 text-stone-700'
                   }`}>
-                    Hai risolto i 4 casi con {compatCorretteCount}/4 risposte corrette{compatCorretteCount >= 3 ? ' (+1 pt).' : ' (servono almeno 3/4 per +1 pt).'}
+                    Risolti i 4 casi con {compatCorretteCount}/4 risposte corrette{compatCorretteCount === 4 ? ' (+2 pt).' : compatCorretteCount >= 3 ? ' (+1 pt).' : ' (servono almeno 3/4 per +1 pt).'}
                   </div>
                 )}
               </div>
             );
           })()}
 
-          {/* GIOCO 4: PREPARA LO ZAINO PER LA VISITA AVIS (+2 PT) */}
-          {giocoAttivo === 'zaino' && (
+          {/* GIOCO 4 (SET A): PREPARA LO ZAINO / SCENARIO DEL GIORNO (+2 PT) */}
+          {giocoCorrenteId === 'zaino' && (
             <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm space-y-3.5 text-xs">
               <div>
                 <h3 className="text-sm font-black text-stone-900">
-                  Prepara lo Zaino per la Visita AVIS (+2 pt)
+                  {scenarioZainoOggi.titolo} (+2 pt)
                 </h3>
                 <p className="text-[11px] text-stone-500 mt-0.5">
-                  Seleziona esattamente i <strong>4 oggetti utili</strong> ed evita i 3 sbagliati prima di uscire di casa!
+                  {scenarioZainoOggi.consegna}
                 </p>
               </div>
 
@@ -5383,7 +5810,7 @@ function SchermataBonus({
                     >
                       <span>{obj.label}</span>
                       <span className="text-xs font-black">
-                        {scelto ? '✓ Scelto' : '+ Metti'}
+                        {scelto ? '✓ Scelto' : '+ Scegli'}
                       </span>
                     </button>
                   );
@@ -5399,26 +5826,26 @@ function SchermataBonus({
                     : 'bg-stone-900 hover:bg-stone-800 text-white'
                 }`}
               >
-                {zainoCompletato ? 'Zaino Completo! (+2 pt oggi ✓)' : `Verifica Zaino (${zainoScelti.length}/4 selezionati)`}
+                {zainoCompletato ? 'Completato! (+2 pt oggi ✓)' : `Verifica Scelte (${zainoScelti.length}/4 selezionati)`}
               </button>
             </div>
           )}
 
-          {/* GIOCO 5: PAROLA MISTERIOSA EMATICA (+1 PT A PAROLA) */}
-          {giocoAttivo === 'parola' && (
+          {/* GIOCO 5 (SET A): PAROLA MISTERIOSA EMATICA (2 PAROLE AL GIORNO, +1 PT CIASCUNA) */}
+          {giocoCorrenteId === 'parola' && parolaAttuale && (
             <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm space-y-3.5 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
-                  Parola {indiceParola + 1} di 4 · +1 pt
+                  Parola {indiceParola + 1} di {paroleOggi.length} · +1 pt
                 </span>
                 <button
                   onClick={() => {
-                    setIndiceParola((prev) => (prev + 1) % paroleMisteriose.length);
+                    setIndiceParola((prev) => (prev + 1) % paroleOggi.length);
                     setInputParola('');
                   }}
                   className="text-[11px] font-bold text-stone-500 underline"
                 >
-                  Cambia parola →
+                  Altra parola ({indiceParola === 0 ? '2' : '1'}/{paroleOggi.length}) →
                 </button>
               </div>
 
@@ -5463,18 +5890,18 @@ function SchermataBonus({
             </div>
           )}
 
-          {/* GIOCO 6: MEMORY EMATICO (+2 PT, 1 VOLTA AL GIORNO) */}
-          {giocoAttivo === 'memory' && (
+          {/* GIOCO 6 (SET B): MEMORY EMATICO (+2 PT, 1 VOLTA AL GIORNO) */}
+          {giocoCorrenteId === 'memory' && (
             <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black text-stone-900">
-                  Abbina le 4 Coppie (+2 pt{memoryPremiato ? ' · Già preso oggi' : ''})
+                  Abbina le 4 Coppie (+2 pt{memoryPremiato ? ' · Fatto' : ''})
                 </h3>
                 <button
                   onClick={() => {
                     setIndovinate([]);
                     setScoperte([]);
-                    setCarte(mescolaCarte(carteIniziali));
+                    setCarte(mescolaCarte(creaCarteGiorno()));
                   }}
                   className="text-xs font-bold text-rose-600"
                 >
@@ -5601,7 +6028,9 @@ function ModalePersonalizzaAvatar({
 
   const selezionaElemento = (chiaveConfig, prefisso, item) => {
     if (isSbloccato(prefisso, item)) {
-      setBozzaAvatar((prev) => ({ ...prev, [chiaveConfig]: item.id }));
+      const nuovoAvatar = { ...bozzaAvatar, [chiaveConfig]: item.id };
+      setBozzaAvatar(nuovoAvatar);
+      setAvatar(nuovoAvatar);
       setAnteprimaBloccata(null);
     } else {
       setAnteprimaBloccata({ chiaveConfig, prefisso, item });
@@ -5616,11 +6045,13 @@ function ModalePersonalizzaAvatar({
       return;
     }
     const token = `${prefisso}:${item.id}`;
+    const nuovoAvatar = { ...bozzaAvatar, [chiaveConfig]: item.id };
     setGocceTotali((prev) => prev - item.costo);
-    setVestiSbloccate((prev) => [...prev, token]);
-    setBozzaAvatar((prev) => ({ ...prev, [chiaveConfig]: item.id }));
+    setVestiSbloccate((prev) => (prev.includes(token) ? prev : [...prev, token]));
+    setBozzaAvatar(nuovoAvatar);
+    setAvatar(nuovoAvatar);
     setAnteprimaBloccata(null);
-    mostraNotifica('Oggetto Sbloccato! ✨', item.nome, -item.costo);
+    mostraNotifica('Oggetto Sbloccato e Indossato! ✨', item.nome, -item.costo);
   };
 
   const salvaModifiche = () => {
@@ -5963,6 +6394,11 @@ function ModalePersonalizzaAvatar({
             <div className={sbloccato ? '' : 'opacity-65'}>
               {renderMiniatura(cat, item.id)}
             </div>
+            {selezionato && sbloccato && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-black shadow flex items-center justify-center">
+                ✓
+              </span>
+            )}
             {!sbloccato && (
               <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-[#222845] text-white text-[8px] font-black shadow">
                 🔒{item.costo}
@@ -6090,7 +6526,9 @@ function ModalePersonalizzaAvatar({
                   type="button"
                   title={e.nome}
                   onClick={() => {
-                    setBozzaAvatar((prev) => ({ ...prev, espressione: e.id }));
+                    const nuovoAvatar = { ...bozzaAvatar, espressione: e.id };
+                    setBozzaAvatar(nuovoAvatar);
+                    setAvatar(nuovoAvatar);
                     setAnteprimaBloccata(null);
                   }}
                   className={`aspect-square rounded-2xl border-2 flex items-center justify-center transition p-1 ${
@@ -6218,10 +6656,11 @@ function ModalePersonalizzaAvatar({
 // ============================================================================
 function SaccaMascotte({ posa = 'stelle', size = 'md' }) {
   const dim = size === 'sm' ? 'w-10 h-11' : size === 'lg' ? 'w-20 h-24' : 'w-14 h-16';
+  const gradIdRef = useRef(`saccaGrad-${Math.random().toString(36).slice(2, 8)}`);
   return (
     <svg viewBox="0 0 100 120" className={`${dim} overflow-visible select-none shrink-0`}>
       <defs>
-        <linearGradient id="saccaBloodGrad" x1="20%" y1="15%" x2="80%" y2="90%">
+        <linearGradient id={gradIdRef.current} x1="20%" y1="15%" x2="80%" y2="90%">
           <stop offset="0%" stopColor="#E11D48" />
           <stop offset="55%" stopColor="#B91C1C" />
           <stop offset="100%" stopColor="#7F1D1D" />
@@ -6269,7 +6708,7 @@ function SaccaMascotte({ posa = 'stelle', size = 'md' }) {
       {/* Liquido sangue interno con onda superiore */}
       <path
         d="M26 42 Q38 36 50 41 Q62 46 74 40 L74 84 C74 90, 69 93, 62 93 L38 93 C31 93, 26 90, 26 84 Z"
-        fill="url(#saccaBloodGrad)"
+        fill={`url(#${gradIdRef.current})`}
       />
       {/* Riflesso lucido */}
       <path d="M31 46 L31 78" stroke="#FFE4E6" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
@@ -6352,36 +6791,49 @@ function GuidaSaccaInterattiva({
 
   const tappeTour = [
     {
+      id: 'intro',
+      scheda: 'home',
+      titolo: '👋 Piacere, sono Vena Lisa!',
+      posa: 'occhiolino',
+      testo: `Ciao ${nome}! Io sono Vena Lisa, la tua guida ufficiale di gruppo zero-ansia! Non sono una dispensa da 400 pagine e non chiedo i CFU: ti mostro come funziona l'app in meno tempo di un caffè alle macchinette!`
+    },
+    {
+      id: 'home',
       scheda: 'home',
       titolo: '1. La tua Home',
       posa: 'stelle',
       testo: `Ciao ${nome}! Il primo passo è solo una visita conoscitiva... niente ansia, non è un esame orale a sorpresa!`
     },
     {
+      id: 'quiz',
       scheda: 'quiz',
       titolo: '2. Pre-Quiz Idoneità',
       posa: 'dito',
       testo: '15 domande lampo sui requisiti AVIS: finalmente un test in cui non devi prendere 30 e lode per passare!'
     },
     {
+      id: 'tutor',
       scheda: 'tutor',
-      titolo: '3. Scegli o Diventa Tutor',
+      titolo: '3. Scegli o Diventa Tutor (Facoltativo)',
       posa: 'occhiolino',
-      testo: 'Hai un po\' di ansia? Scegli un Tutor! È come un compagno di studi, ma non ti chiederà gli appunti all\'ultimo minuto!'
+      testo: 'Hai un po\' di ansia? Puoi scegliere un Tutor (facoltativo, puoi andare anche da solo!): è come un compagno di studi, ma non ti chiederà gli appunti all\'ultimo minuto!'
     },
     {
+      id: 'visita',
       scheda: 'visita',
       titolo: '4. Richiedi la 1ª Visita',
       posa: 'sveglia',
       testo: 'Compili il modulo sul sito AVIS e la segreteria ti richiama: niente appuntamenti al buio, e poi colazione offerta!'
     },
     {
+      id: 'sedi',
       scheda: 'sedi',
       titolo: '5. Sedi, Bus e Parcheggi',
       posa: 'mappa',
       testo: 'Mappa, autobus e parcheggi gratuiti a Pavia: almeno qui non devi fare a pugni per un posto in aula studio!'
     },
     {
+      id: 'bonus',
       scheda: 'bonus',
       titolo: '6. Minigiochi & Ringraziamenti',
       posa: 'trofeo',
@@ -6492,7 +6944,7 @@ function GuidaSaccaInterattiva({
             <div className="flex items-center space-x-1">
               {tappeTour.map((t, idx) => (
                 <button
-                  key={t.scheda}
+                  key={t.id}
                   type="button"
                   onClick={() => vaiAStepTour(idx)}
                   className={`h-1.5 rounded-full transition-all ${
@@ -6517,7 +6969,11 @@ function GuidaSaccaInterattiva({
                 onClick={() => vaiAStepTour(stepTour + 1)}
                 className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] font-black shadow-sm transition active:scale-95"
               >
-                {stepTour < tappeTour.length - 1 ? `Avanti (${stepTour + 1}/6) →` : 'Inizia! 🎉'}
+                {stepTour === 0
+                  ? 'Iniziamo il giro! →'
+                  : stepTour < tappeTour.length - 1
+                  ? `Avanti (${stepTour}/6) →`
+                  : 'Inizia! 🎉'}
               </button>
             </div>
           </div>
@@ -6535,7 +6991,7 @@ function GuidaSaccaInterattiva({
           setRidottaBordo(false);
           setFumettoAperto(true);
         }}
-        title="Apri Sacca Guida"
+        title="Apri Vena Lisa"
         className="absolute bottom-20 right-0 z-30 bg-white border border-r-0 border-rose-200 rounded-l-2xl pl-2 pr-1.5 py-1.5 shadow-md flex items-center space-x-1 hover:bg-rose-50 transition"
       >
         <span className="text-xs">🩸</span>
@@ -6549,9 +7005,14 @@ function GuidaSaccaInterattiva({
       {fumettoAperto && (
         <div className="pointer-events-auto w-64 max-w-[82vw] bg-white rounded-3xl rounded-br-md border-2 border-stone-900 shadow-xl p-3.5 space-y-2.5">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-xs font-bold text-stone-800 leading-snug">
-              "{fraseCorrente}"
-            </p>
+            <div className="space-y-1 min-w-0">
+              <span className="inline-block text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
+                🩸 Vena Lisa
+              </span>
+              <p className="text-xs font-bold text-stone-800 leading-snug">
+                "{fraseCorrente}"
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setFumettoAperto(false)}
@@ -6605,7 +7066,7 @@ function GuidaSaccaInterattiva({
       <button
         type="button"
         onClick={toccaMiniSacca}
-        title="Tocca la Sacca per consigli e frasi!"
+        title="Tocca Vena Lisa per consigli e battute!"
         className={`pointer-events-auto w-12 h-12 rounded-full bg-white border-2 border-rose-300 shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-90 ${
           saltaAnim ? '-translate-y-1.5 scale-110' : ''
         }`}
@@ -6643,6 +7104,7 @@ function ModaleImpostazioni({
   setModalitaSviluppatore,
   emailJsConfig,
   setEmailJsConfig,
+  onLogoutUtente,
   onResetTuttiDati,
   onClose
 }) {
@@ -6676,7 +7138,17 @@ function ModaleImpostazioni({
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-100 font-bold text-xs">✕</button>
         </div>
 
-        {/* 1. ELIMINA ACCOUNT E DATI LOCALI */}
+        {/* 1. ESCI DALL'ACCOUNT (TORNA AL LOGIN SENZA CANCELLARE I DATI) */}
+        <button
+          type="button"
+          onClick={onLogoutUtente}
+          className="w-full py-2.5 px-3.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-2xl font-black text-xs flex items-center justify-between transition"
+        >
+          <span>🚪 Esci dall'account</span>
+          <span className="text-stone-400">Login →</span>
+        </button>
+
+        {/* 2. ELIMINA ACCOUNT E DATI LOCALI */}
         <div className="bg-stone-50 p-3.5 rounded-2xl border border-stone-200/80 space-y-2">
           <div className="font-black text-stone-900">🗑️ Elimina account</div>
           <p className="text-[11px] text-stone-600 leading-snug">
@@ -6859,85 +7331,204 @@ function creaStatoGiochiVuoto(oggiISO) {
   };
 }
 
-function caricaStatoSalvato() {
+function caricaAccountsSalvati() {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY_APP);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const raw = window.localStorage.getItem(STORAGE_KEY_ACCOUNTS);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
   } catch (e) {
-    return null;
+    return {};
   }
 }
 
-function App() {
-  const statoSalvatoRef = useRef(undefined);
-  if (statoSalvatoRef.current === undefined) {
-    statoSalvatoRef.current = caricaStatoSalvato();
+function salvaAccountsSalvati(accountsMap, metaOverride = null) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(accountsMap || {}));
+  } catch (e) {
+    // Ignora errori storage
   }
-  const saved = statoSalvatoRef.current;
-  const oggiISO = ottieniDataOggiISO();
+  const meta = metaOverride ? { ...caricaMetaAuth(), ...metaOverride } : caricaMetaAuth();
+  if (metaOverride) {
+    salvaMetaAuth(meta);
+  }
+  sincronizzaAccountsSuDisco(accountsMap, meta);
+}
 
-  const [registrato, setRegistrato] = useState(() => Boolean(saved?.registrato));
-  const [schedaAttiva, setSchedaAttiva] = useState(() => saved?.schedaAttiva || 'home');
-  const [tutorTabAttiva, setTutorTabAttiva] = useState(() => saved?.tutorTabAttiva || 'trova');
-  const [gocceConoscenza, setGocceConoscenza] = useState(() => (typeof saved?.gocceConoscenza === 'number' ? saved.gocceConoscenza : 45));
-  const [contributoMacroArea, setContributoMacroArea] = useState(() => (typeof saved?.contributoMacroArea === 'number' ? saved.contributoMacroArea : 45));
+function caricaMetaAuth() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_AUTH_META);
+    if (!raw) return { lastEmail: '', rememberEmail: '' };
+    const p = JSON.parse(raw);
+    return {
+      lastEmail: String(p?.lastEmail || '').trim().toLowerCase(),
+      rememberEmail: String(p?.rememberEmail || '').trim().toLowerCase()
+    };
+  } catch (e) {
+    return { lastEmail: '', rememberEmail: '' };
+  }
+}
 
-  const [passo1Completato, setPasso1Completato] = useState(() => Boolean(saved?.passo1Completato));
-  const [passo2Completato, setPasso2Completato] = useState(() => Boolean(saved?.passo2Completato));
-  const [passo3Completato, setPasso3Completato] = useState(() => Boolean(saved?.passo3Completato));
-  const [visitaVerificataAvis, setVisitaVerificataAvis] = useState(() => Boolean(saved?.visitaVerificataAvis));
-  const [dataRichiestaVisita, setDataRichiestaVisita] = useState(() => saved?.dataRichiestaVisita || null);
-  const [sedePreferitaVisita, setSedePreferitaVisita] = useState(() => saved?.sedePreferitaVisita || 'avis_pavia');
-  const [fasciaPreferitaVisita, setFasciaPreferitaVisita] = useState(() => saved?.fasciaPreferitaVisita || 'Mercoledì mattina');
+function salvaMetaAuth(meta) {
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY_AUTH_META,
+      JSON.stringify({
+        lastEmail: String(meta?.lastEmail || '').trim().toLowerCase(),
+        rememberEmail: String(meta?.rememberEmail || '').trim().toLowerCase()
+      })
+    );
+  } catch (e) {
+    // Ignora errori storage
+  }
+}
 
-  const [donazioneVerificataAvis, setDonazioneVerificataAvis] = useState(() => Boolean(saved?.donazioneVerificataAvis));
-  const [timestampDonazione, setTimestampDonazione] = useState(() => (typeof saved?.timestampDonazione === 'number' ? saved.timestampDonazione : null));
+function unisciMappaAccounts(mappaA, mappaB) {
+  const uniti = {};
+  [mappaA, mappaB].forEach((mappa) => {
+    if (!mappa || typeof mappa !== 'object') return;
+    Object.entries(mappa).forEach(([chiave, valore]) => {
+      if (!valore || typeof valore !== 'object') return;
+      const k = String(valore.email || chiave || '').trim().toLowerCase();
+      if (!k) return;
+      const attuale = uniti[k];
+      const tsNuovo = Number(valore.aggiornatoIl || valore.creataIl || 0);
+      const tsAttuale = Number(attuale?.aggiornatoIl || attuale?.creataIl || 0);
+      if (!attuale || tsNuovo >= tsAttuale) {
+        uniti[k] = { ...valore, email: k };
+      }
+    });
+  });
+  return uniti;
+}
+
+function sincronizzaAccountsSuDisco(accountsMap, metaAuth) {
+  try {
+    if (typeof window === 'undefined' || !/^https?:$/i.test(window.location?.protocol || '')) return;
+    fetch('/__invein_accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accounts: accountsMap || {},
+        lastEmail: String(metaAuth?.lastEmail || '').trim().toLowerCase(),
+        rememberEmail: String(metaAuth?.rememberEmail || '').trim().toLowerCase()
+      }),
+      keepalive: true
+    }).catch(() => {});
+  } catch (e) {
+    // Ignora errori rete locali
+  }
+}
+
+function creaStatoUtenteIniziale(oggiISO) {
+  return {
+    schedaAttiva: 'home',
+    tutorTabAttiva: 'trova',
+    gocceConoscenza: 45,
+    contributoMacroArea: 45,
+    passo1Completato: false,
+    passo2Completato: false,
+    passo3Completato: false,
+    visitaVerificataAvis: false,
+    dataRichiestaVisita: null,
+    sedePreferitaVisita: 'avis_pavia',
+    fasciaPreferitaVisita: 'Mercoledì mattina',
+    donazioneVerificataAvis: false,
+    timestampDonazione: null,
+    tipoCiclo: 'sangue_90',
+    tutorSceltoId: null,
+    guidaTutorAccettata: false,
+    tutorAbilitatoAvis: false,
+    isTutorAttivo: false,
+    fraseTutor: 'Anche io all\'inizio avevo mille dubbi: ti accompagno volentieri dall\'ingresso fino alla colazione post-visita!',
+    disponibileTutor: true,
+    richiesteTutor: creaRichiesteTutorIniziali(),
+    profilo: {
+      nome: '',
+      cognome: '',
+      facolta: MACRO_DIPARTIMENTI_UNIPV[1],
+      email: ''
+    },
+    avatar: creaAvatarBase(),
+    vestiSbloccate: [],
+    accessoriSbloccati: [],
+    storicoBuoni: [],
+    giochiStato: creaStatoGiochiVuoto(oggiISO),
+    serieSettimane: 1,
+    ultimaSettimanaAttiva: null,
+    serieCicliDonazione: 0,
+    tourCompletato: false,
+    modalitaSviluppatore: false
+  };
+}
+
+function App() {
+  const [oggiISO, setOggiISO] = useState(() => ottieniDataOggiISO());
+
+  const [accounts, setAccounts] = useState(() => caricaAccountsSalvati());
+  const accountsRef = useRef(accounts);
+  const [authMeta, setAuthMeta] = useState(() => caricaMetaAuth());
+  const authMetaRef = useRef(authMeta);
+
+  const accountRememberBoot =
+    authMeta.rememberEmail && accounts[authMeta.rememberEmail]
+      ? accounts[authMeta.rememberEmail]
+      : null;
+  const bootBase = creaStatoUtenteIniziale(oggiISO);
+  const sBoot =
+    accountRememberBoot?.stato && typeof accountRememberBoot.stato === 'object'
+      ? accountRememberBoot.stato
+      : bootBase;
+
+  const [sessioneAttiva, setSessioneAttiva] = useState(() => Boolean(accountRememberBoot));
+  const sessioneAttivaRef = useRef(Boolean(accountRememberBoot));
+  const [emailUtenteAttivo, setEmailUtenteAttivo] = useState(() => (accountRememberBoot ? authMeta.rememberEmail : ''));
+  const mainScrollRef = useRef(null);
+
+  const [schedaAttiva, setSchedaAttiva] = useState(() => sBoot.schedaAttiva || 'home');
+  const [tutorTabAttiva, setTutorTabAttiva] = useState(() => sBoot.tutorTabAttiva || 'trova');
+  const [gocceConoscenza, setGocceConoscenza] = useState(() => (typeof sBoot.gocceConoscenza === 'number' ? sBoot.gocceConoscenza : bootBase.gocceConoscenza));
+  const [contributoMacroArea, setContributoMacroArea] = useState(() => (typeof sBoot.contributoMacroArea === 'number' ? sBoot.contributoMacroArea : bootBase.contributoMacroArea));
+
+  const [passo1Completato, setPasso1Completato] = useState(() => Boolean(sBoot.passo1Completato));
+  const [passo2Completato, setPasso2Completato] = useState(() => Boolean(sBoot.passo2Completato));
+  const [passo3Completato, setPasso3Completato] = useState(() => Boolean(sBoot.passo3Completato));
+  const [visitaVerificataAvis, setVisitaVerificataAvis] = useState(() => Boolean(sBoot.visitaVerificataAvis));
+  const [dataRichiestaVisita, setDataRichiestaVisita] = useState(() => sBoot.dataRichiestaVisita || null);
+  const [sedePreferitaVisita, setSedePreferitaVisita] = useState(() => sBoot.sedePreferitaVisita || 'avis_pavia');
+  const [fasciaPreferitaVisita, setFasciaPreferitaVisita] = useState(() => sBoot.fasciaPreferitaVisita || 'Mercoledì mattina');
+
+  const [donazioneVerificataAvis, setDonazioneVerificataAvis] = useState(() => Boolean(sBoot.donazioneVerificataAvis));
+  const [timestampDonazione, setTimestampDonazione] = useState(() => (typeof sBoot.timestampDonazione === 'number' ? sBoot.timestampDonazione : null));
   const [giorniDemoOffset, setGiorniDemoOffset] = useState(0);
-  const [tipoCiclo, setTipoCiclo] = useState(() =>
-    saved?.tipoCiclo === 'donna_fertile' ? 'donna_180' : (saved?.tipoCiclo || 'sangue_90')
-  );
+  const [tipoCiclo, setTipoCiclo] = useState(() => (sBoot.tipoCiclo === 'donna_fertile' ? 'donna_180' : (sBoot.tipoCiclo || 'sangue_90')));
 
-  const [tutorSceltoId, setTutorSceltoId] = useState(() => saved?.tutorSceltoId || null);
-  const [guidaTutorAccettata, setGuidaTutorAccettata] = useState(() => Boolean(saved?.guidaTutorAccettata));
-  const [tutorAbilitatoAvis, setTutorAbilitatoAvis] = useState(() => Boolean(saved?.tutorAbilitatoAvis));
-  const [isTutorAttivo, setIsTutorAttivo] = useState(() => Boolean(saved?.isTutorAttivo));
-  const [fraseTutor, setFraseTutor] = useState(
-    () => saved?.fraseTutor || 'Anche io all\'inizio avevo mille dubbi: ti accompagno volentieri dall\'ingresso fino alla colazione post-visita!'
-  );
-  const [disponibileTutor, setDisponibileTutor] = useState(() => (saved?.disponibileTutor !== undefined ? Boolean(saved.disponibileTutor) : true));
-  const [richiesteTutor, setRichiesteTutor] = useState(() => (Array.isArray(saved?.richiesteTutor) && saved.richiesteTutor.length > 0 ? saved.richiesteTutor : creaRichiesteTutorIniziali()));
+  const [tutorSceltoId, setTutorSceltoId] = useState(() => sBoot.tutorSceltoId || null);
+  const [guidaTutorAccettata, setGuidaTutorAccettata] = useState(() => Boolean(sBoot.guidaTutorAccettata));
+  const [tutorAbilitatoAvis, setTutorAbilitatoAvis] = useState(() => Boolean(sBoot.tutorAbilitatoAvis));
+  const [isTutorAttivo, setIsTutorAttivo] = useState(() => Boolean(sBoot.isTutorAttivo));
+  const [fraseTutor, setFraseTutor] = useState(() => sBoot.fraseTutor || bootBase.fraseTutor);
+  const [disponibileTutor, setDisponibileTutor] = useState(() => (sBoot.disponibileTutor !== undefined ? Boolean(sBoot.disponibileTutor) : true));
+  const [richiesteTutor, setRichiesteTutor] = useState(() => (Array.isArray(sBoot.richiesteTutor) && sBoot.richiesteTutor.length > 0 ? sBoot.richiesteTutor : creaRichiesteTutorIniziali()));
 
-  const [profilo, setProfilo] = useState(() => saved?.profilo || {
-    nome: '',
-    cognome: '',
-    facolta: MACRO_DIPARTIMENTI_UNIPV[1],
-    email: ''
-  });
+  const [profilo, setProfilo] = useState(() => sBoot.profilo || bootBase.profilo);
 
-  const [avatar, setAvatar] = useState(() => saved?.avatar || {
-    coloreGoccia: 'rubino',
-    abbigliamento: 'nessuno',
-    copricapo: 'nessuno',
-    oggettoStudio: 'nessuno',
-    visoAccessorio: 'cerotto',
-    espressione: 'sorridente'
-  });
+  const [avatar, setAvatar] = useState(() => (sBoot.avatar ? { ...creaAvatarBase(), ...sBoot.avatar } : creaAvatarBase()));
 
-  const [vestiSbloccate, setVestiSbloccate] = useState(() => (Array.isArray(saved?.vestiSbloccate) ? saved.vestiSbloccate : []));
-  const [accessoriSbloccati, setAccessoriSbloccati] = useState(() => (Array.isArray(saved?.accessoriSbloccati) ? saved.accessoriSbloccati : []));
-  const [storicoBuoni, setStoricoBuoni] = useState(() => (Array.isArray(saved?.storicoBuoni) ? saved.storicoBuoni : []));
-  const [giochiStato, setGiochiStato] = useState(() => (saved?.giochiStato?.data === oggiISO ? saved.giochiStato : creaStatoGiochiVuoto(oggiISO)));
+  const [vestiSbloccate, setVestiSbloccate] = useState(() => (Array.isArray(sBoot.vestiSbloccate) ? sBoot.vestiSbloccate : []));
+  const [accessoriSbloccati, setAccessoriSbloccati] = useState(() => (Array.isArray(sBoot.accessoriSbloccati) ? sBoot.accessoriSbloccati : []));
+  const [storicoBuoni, setStoricoBuoni] = useState(() => (Array.isArray(sBoot.storicoBuoni) ? sBoot.storicoBuoni : []));
+  const [giochiStato, setGiochiStato] = useState(() => (sBoot.giochiStato?.data === oggiISO ? sBoot.giochiStato : creaStatoGiochiVuoto(oggiISO)));
 
-  const [serieSettimane, setSerieSettimane] = useState(() => (typeof saved?.serieSettimane === 'number' ? saved.serieSettimane : 1));
-  const [ultimaSettimanaAttiva, setUltimaSettimanaAttiva] = useState(() => saved?.ultimaSettimanaAttiva || null);
-  const [serieCicliDonazione, setSerieCicliDonazione] = useState(() => (typeof saved?.serieCicliDonazione === 'number' ? saved.serieCicliDonazione : 0));
+  const [serieSettimane, setSerieSettimane] = useState(() => (typeof sBoot.serieSettimane === 'number' ? sBoot.serieSettimane : 1));
+  const [ultimaSettimanaAttiva, setUltimaSettimanaAttiva] = useState(() => sBoot.ultimaSettimanaAttiva || null);
+  const [serieCicliDonazione, setSerieCicliDonazione] = useState(() => (typeof sBoot.serieCicliDonazione === 'number' ? sBoot.serieCicliDonazione : 0));
 
-  const [tourCompletato, setTourCompletato] = useState(() => Boolean(saved?.tourCompletato));
+  const [tourCompletato, setTourCompletato] = useState(() => Boolean(sBoot.tourCompletato));
   const [tourAttivo, setTourAttivo] = useState(false);
   const [stepTour, setStepTour] = useState(0);
 
-  const [modalitaSviluppatore, setModalitaSviluppatore] = useState(() => Boolean(saved?.modalitaSviluppatore));
+  const [modalitaSviluppatore, setModalitaSviluppatore] = useState(() => Boolean(sBoot.modalitaSviluppatore));
   const [emailJsConfig, setEmailJsConfig] = useState(() => caricaConfigEmailJS());
   const [modaleAvatarAperta, setModaleAvatarAperta] = useState(false);
   const [modaleSerieAperta, setModaleSerieAperta] = useState(false);
@@ -6947,55 +7538,174 @@ function App() {
   const notificaTimerRef = useRef(null);
 
   useEffect(() => {
+    sessioneAttivaRef.current = sessioneAttiva;
+  }, [sessioneAttiva]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const nuovaData = ottieniDataOggiISO();
+      setOggiISO((prev) => (prev === nuovaData ? prev : nuovaData));
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
+  }, [schedaAttiva]);
+
+  useEffect(() => {
     return () => {
       if (notificaTimerRef.current) clearTimeout(notificaTimerRef.current);
     };
   }, []);
 
-  // Persistenza automatica stato app su localStorage
+  // Sincronizzazione all'avvio con file locale su disco /__invein_accounts
   useEffect(() => {
-    try {
-      const payload = {
-        registrato,
-        schedaAttiva,
-        tutorTabAttiva,
-        gocceConoscenza,
-        contributoMacroArea,
-        passo1Completato,
-        passo2Completato,
-        passo3Completato,
-        visitaVerificataAvis,
-        dataRichiestaVisita,
-        sedePreferitaVisita,
-        fasciaPreferitaVisita,
-        donazioneVerificataAvis,
-        timestampDonazione,
-        tipoCiclo,
-        tutorSceltoId,
-        guidaTutorAccettata,
-        tutorAbilitatoAvis,
-        isTutorAttivo,
-        fraseTutor,
-        disponibileTutor,
-        richiesteTutor,
-        profilo,
-        avatar,
-        vestiSbloccate,
-        accessoriSbloccati,
-        storicoBuoni,
-        giochiStato,
-        serieSettimane,
-        ultimaSettimanaAttiva,
-        serieCicliDonazione,
-        tourCompletato,
-        modalitaSviluppatore
-      };
-      window.localStorage.setItem(STORAGE_KEY_APP, JSON.stringify(payload));
-    } catch (e) {
-      // Ignora errori storage
-    }
+    if (typeof window === 'undefined' || !/^https?:$/i.test(window.location?.protocol || '')) return;
+    let annullato = false;
+    fetch('/__invein_accounts', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((disco) => {
+        if (annullato || !disco || typeof disco !== 'object') return;
+        const accountsLocaliPrima = accountsRef.current;
+        const uniti = unisciMappaAccounts(accountsLocaliPrima, disco.accounts || {});
+        const primaChiave = Object.keys(uniti)[0] || '';
+        const resolvedLast = String(authMetaRef.current.lastEmail || disco.lastEmail || primaChiave).trim().toLowerCase();
+        const resolvedRemember = String(authMetaRef.current.rememberEmail || disco.rememberEmail || '').trim().toLowerCase();
+        const nextMeta = { lastEmail: resolvedLast, rememberEmail: resolvedRemember };
+
+        accountsRef.current = uniti;
+        setAccounts(uniti);
+        authMetaRef.current = nextMeta;
+        setAuthMeta(nextMeta);
+        salvaMetaAuth(nextMeta);
+
+        try {
+          window.localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(uniti));
+        } catch (e) {
+          // Ignora errori storage
+        }
+
+        if (resolvedRemember && uniti[resolvedRemember]) {
+          const statoDisk = disco.accounts?.[resolvedRemember];
+          const statoLoc = accountsLocaliPrima?.[resolvedRemember];
+          const tsDisk = Number(statoDisk?.aggiornatoIl || statoDisk?.creataIl || 0);
+          const tsLoc = Number(statoLoc?.aggiornatoIl || statoLoc?.creataIl || 0);
+          if (!sessioneAttivaRef.current || tsDisk > tsLoc) {
+            caricaStatoInApp(uniti[resolvedRemember].stato, ottieniDataOggiISO());
+            setEmailUtenteAttivo(resolvedRemember);
+            setSessioneAttiva(true);
+            sessioneAttivaRef.current = true;
+          }
+        }
+
+        if (Object.keys(uniti).length > Object.keys(disco.accounts || {}).length) {
+          sincronizzaAccountsSuDisco(uniti, nextMeta);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      annullato = true;
+    };
+  }, []);
+
+  const esportaStatoCorrente = () => ({
+    schedaAttiva,
+    tutorTabAttiva,
+    gocceConoscenza,
+    contributoMacroArea,
+    passo1Completato,
+    passo2Completato,
+    passo3Completato,
+    visitaVerificataAvis,
+    dataRichiestaVisita,
+    sedePreferitaVisita,
+    fasciaPreferitaVisita,
+    donazioneVerificataAvis,
+    timestampDonazione,
+    tipoCiclo,
+    tutorSceltoId,
+    guidaTutorAccettata,
+    tutorAbilitatoAvis,
+    isTutorAttivo,
+    fraseTutor,
+    disponibileTutor,
+    richiesteTutor,
+    profilo,
+    avatar,
+    vestiSbloccate,
+    accessoriSbloccati,
+    storicoBuoni,
+    giochiStato,
+    serieSettimane,
+    ultimaSettimanaAttiva,
+    serieCicliDonazione,
+    tourCompletato,
+    modalitaSviluppatore
+  });
+
+  const caricaStatoInApp = (statoInput, dataOggiISO) => {
+    const base = creaStatoUtenteIniziale(dataOggiISO);
+    const s = statoInput && typeof statoInput === 'object' ? statoInput : base;
+    setSchedaAttiva(s.schedaAttiva || 'home');
+    setTutorTabAttiva(s.tutorTabAttiva || 'trova');
+    setGocceConoscenza(typeof s.gocceConoscenza === 'number' ? s.gocceConoscenza : base.gocceConoscenza);
+    setContributoMacroArea(typeof s.contributoMacroArea === 'number' ? s.contributoMacroArea : base.contributoMacroArea);
+    setPasso1Completato(Boolean(s.passo1Completato));
+    setPasso2Completato(Boolean(s.passo2Completato));
+    setPasso3Completato(Boolean(s.passo3Completato));
+    setVisitaVerificataAvis(Boolean(s.visitaVerificataAvis));
+    setDataRichiestaVisita(s.dataRichiestaVisita || null);
+    setSedePreferitaVisita(s.sedePreferitaVisita || 'avis_pavia');
+    setFasciaPreferitaVisita(s.fasciaPreferitaVisita || 'Mercoledì mattina');
+    setDonazioneVerificataAvis(Boolean(s.donazioneVerificataAvis));
+    setTimestampDonazione(typeof s.timestampDonazione === 'number' ? s.timestampDonazione : null);
+    setGiorniDemoOffset(0);
+    setTipoCiclo(s.tipoCiclo === 'donna_fertile' ? 'donna_180' : (s.tipoCiclo || 'sangue_90'));
+    setTutorSceltoId(s.tutorSceltoId || null);
+    setGuidaTutorAccettata(Boolean(s.guidaTutorAccettata));
+    setTutorAbilitatoAvis(Boolean(s.tutorAbilitatoAvis));
+    setIsTutorAttivo(Boolean(s.isTutorAttivo));
+    setFraseTutor(s.fraseTutor || base.fraseTutor);
+    setDisponibileTutor(s.disponibileTutor !== undefined ? Boolean(s.disponibileTutor) : true);
+    setRichiesteTutor(Array.isArray(s.richiesteTutor) && s.richiesteTutor.length > 0 ? s.richiesteTutor : creaRichiesteTutorIniziali());
+    setProfilo(s.profilo || base.profilo);
+    setAvatar(s.avatar ? { ...creaAvatarBase(), ...s.avatar } : creaAvatarBase());
+    setVestiSbloccate(Array.isArray(s.vestiSbloccate) ? s.vestiSbloccate : []);
+    setAccessoriSbloccati(Array.isArray(s.accessoriSbloccati) ? s.accessoriSbloccati : []);
+    setStoricoBuoni(Array.isArray(s.storicoBuoni) ? s.storicoBuoni : []);
+    setGiochiStato(s.giochiStato?.data === dataOggiISO ? s.giochiStato : creaStatoGiochiVuoto(dataOggiISO));
+    setSerieSettimane(typeof s.serieSettimane === 'number' ? s.serieSettimane : 1);
+    setUltimaSettimanaAttiva(s.ultimaSettimanaAttiva || null);
+    setSerieCicliDonazione(typeof s.serieCicliDonazione === 'number' ? s.serieCicliDonazione : 0);
+    setTourCompletato(Boolean(s.tourCompletato));
+    setModalitaSviluppatore(Boolean(s.modalitaSviluppatore));
+  };
+
+  // Persistenza automatica dell'account attivo su localStorage e file locale su disco
+  useEffect(() => {
+    if (!sessioneAttiva || !emailUtenteAttivo) return;
+    const payload = esportaStatoCorrente();
+    const precedente = accountsRef.current[emailUtenteAttivo] || { email: emailUtenteAttivo, password: '', creataIl: Date.now() };
+    const aggiornati = {
+      ...accountsRef.current,
+      [emailUtenteAttivo]: {
+        ...precedente,
+        email: emailUtenteAttivo,
+        aggiornatoIl: Date.now(),
+        stato: payload
+      }
+    };
+    const nextMeta = { ...authMetaRef.current, lastEmail: emailUtenteAttivo };
+    accountsRef.current = aggiornati;
+    authMetaRef.current = nextMeta;
+    setAccounts(aggiornati);
+    salvaAccountsSalvati(aggiornati, nextMeta);
   }, [
-    registrato,
+    sessioneAttiva,
+    emailUtenteAttivo,
     schedaAttiva,
     tutorTabAttiva,
     gocceConoscenza,
@@ -7176,61 +7886,171 @@ function App() {
     mostraNotifica('Stato Test Ripristinato ↺', 'Tornato al profilo iniziale da 45 pt.', 0);
   };
 
+  const onAccediUtente = (emailOAccount, opzioniOAccount) => {
+    const emailChiave = String(
+      typeof emailOAccount === 'string'
+        ? emailOAccount
+        : (emailOAccount?.email || opzioniOAccount?.email || '')
+    ).trim().toLowerCase();
+    const accountTrovato =
+      (opzioniOAccount?.stato ? opzioniOAccount : null) ||
+      accountsRef.current[emailChiave] ||
+      (typeof emailOAccount === 'object' ? emailOAccount : null);
+    if (!emailChiave || !accountTrovato) {
+      mostraNotifica('Account non trovato', 'Verifica email e password oppure registrati.', 0);
+      return;
+    }
+    const ricorda = Boolean(opzioniOAccount?.ricordaAccesso);
+    const nextMeta = {
+      lastEmail: emailChiave,
+      rememberEmail: ricorda ? emailChiave : ''
+    };
+    authMetaRef.current = nextMeta;
+    setAuthMeta(nextMeta);
+    salvaAccountsSalvati(accountsRef.current, nextMeta);
+
+    const dataOggiISO = ottieniDataOggiISO();
+    caricaStatoInApp(accountTrovato.stato, dataOggiISO);
+    setEmailUtenteAttivo(emailChiave);
+    setSessioneAttiva(true);
+    sessioneAttivaRef.current = true;
+    setTourAttivo(false);
+    setModaleAvatarAperta(false);
+    setModaleImpostazioniAperta(false);
+    if (!accountTrovato.stato?.tourCompletato) {
+      setStepTour(0);
+      setTourAttivo(true);
+      setTourCompletato(true);
+    }
+    const nomeUtente = accountTrovato.stato?.profilo?.nome || 'Donatore';
+    mostraNotifica(`Bentornato, ${nomeUtente}! 👋`, 'Il tuo percorso IN VEIN Pavia è stato caricato.', 0);
+  };
+
+  const onIniziaNuovaRegistrazione = () => {
+    const dataOggiISO = ottieniDataOggiISO();
+    caricaStatoInApp(creaStatoUtenteIniziale(dataOggiISO), dataOggiISO);
+    setEmailUtenteAttivo('');
+    setSessioneAttiva(false);
+    sessioneAttivaRef.current = false;
+    setTourAttivo(false);
+  };
+
+  const onCompletaRegistrazione = (datiRegistrazione) => {
+    const dataOggiISO = ottieniDataOggiISO();
+    const profiloBase = datiRegistrazione?.profilo ? { ...datiRegistrazione.profilo } : { ...profilo };
+    const emailChiave = String(profiloBase.email || '').trim().toLowerCase();
+    const passwordScelta = typeof datiRegistrazione?.password === 'string' ? datiRegistrazione.password : '';
+    const profiloSalvato = { ...profiloBase, email: emailChiave };
+
+    const statoIniziale = creaStatoUtenteIniziale(dataOggiISO);
+    const nuovoStato = {
+      ...statoIniziale,
+      profilo: profiloSalvato,
+      avatar: avatar ? { ...creaAvatarBase(), ...avatar } : creaAvatarBase(),
+      gocceConoscenza,
+      contributoMacroArea,
+      vestiSbloccate: Array.isArray(vestiSbloccate) ? [...vestiSbloccate] : [],
+      accessoriSbloccati: Array.isArray(accessoriSbloccati) ? [...accessoriSbloccati] : [],
+      tourCompletato: true
+    };
+
+    caricaStatoInApp(nuovoStato, dataOggiISO);
+    if (emailChiave) {
+      const ora = Date.now();
+      const aggiornati = {
+        ...accountsRef.current,
+        [emailChiave]: {
+          email: emailChiave,
+          password: passwordScelta,
+          creataIl: ora,
+          aggiornatoIl: ora,
+          stato: nuovoStato
+        }
+      };
+      const nextMeta = { lastEmail: emailChiave, rememberEmail: '' };
+      accountsRef.current = aggiornati;
+      setAccounts(aggiornati);
+      authMetaRef.current = nextMeta;
+      setAuthMeta(nextMeta);
+      salvaAccountsSalvati(aggiornati, nextMeta);
+      setEmailUtenteAttivo(emailChiave);
+    }
+    setSessioneAttiva(true);
+    sessioneAttivaRef.current = true;
+    setSchedaAttiva('home');
+    setStepTour(0);
+    setTourAttivo(true);
+    setTourCompletato(true);
+  };
+
+  const onLogoutUtente = () => {
+    let accountsAggiornati = accountsRef.current;
+    if (emailUtenteAttivo) {
+      const snapshot = esportaStatoCorrente();
+      const prec = accountsRef.current[emailUtenteAttivo] || { email: emailUtenteAttivo, password: '', creataIl: Date.now() };
+      accountsAggiornati = {
+        ...accountsRef.current,
+        [emailUtenteAttivo]: {
+          ...prec,
+          email: emailUtenteAttivo,
+          aggiornatoIl: Date.now(),
+          stato: snapshot
+        }
+      };
+      accountsRef.current = accountsAggiornati;
+      setAccounts(accountsAggiornati);
+    }
+    const nextMeta = {
+      lastEmail: emailUtenteAttivo || authMetaRef.current.lastEmail || '',
+      rememberEmail: ''
+    };
+    authMetaRef.current = nextMeta;
+    setAuthMeta(nextMeta);
+    salvaAccountsSalvati(accountsAggiornati, nextMeta);
+
+    const dataOggiISO = ottieniDataOggiISO();
+    caricaStatoInApp(creaStatoUtenteIniziale(dataOggiISO), dataOggiISO);
+    setEmailUtenteAttivo('');
+    setSessioneAttiva(false);
+    sessioneAttivaRef.current = false;
+    setTourAttivo(false);
+    setModaleImpostazioniAperta(false);
+    setModaleAvatarAperta(false);
+    setModaleSerieAperta(false);
+    mostraNotifica('Sessione chiusa 👋', 'Al prossimo accesso inserisci la tua email e password.', 0);
+  };
+
   const onResetTuttiDati = () => {
     try {
       window.localStorage.removeItem(STORAGE_KEY_APP);
     } catch (e) {
       // Ignora
     }
-    setRegistrato(false);
-    setSchedaAttiva('home');
-    setTutorTabAttiva('trova');
-    setGocceConoscenza(45);
-    setContributoMacroArea(45);
-    setPasso1Completato(false);
-    setPasso2Completato(false);
-    setPasso3Completato(false);
-    setVisitaVerificataAvis(false);
-    setDataRichiestaVisita(null);
-    setSedePreferitaVisita('avis_pavia');
-    setFasciaPreferitaVisita('Mercoledì mattina');
-    setDonazioneVerificataAvis(false);
-    setTimestampDonazione(null);
-    setGiorniDemoOffset(0);
-    setTipoCiclo('sangue_90');
-    setTutorSceltoId(null);
-    setGuidaTutorAccettata(false);
-    setTutorAbilitatoAvis(false);
-    setIsTutorAttivo(false);
-    setFraseTutor('Anche io all\'inizio avevo mille dubbi: ti accompagno volentieri dall\'ingresso fino alla colazione post-visita!');
-    setDisponibileTutor(true);
-    setRichiesteTutor(creaRichiesteTutorIniziali());
-    setProfilo({
-      nome: '',
-      cognome: '',
-      facolta: MACRO_DIPARTIMENTI_UNIPV[1],
-      email: ''
-    });
-    setAvatar({
-      coloreGoccia: 'rubino',
-      abbigliamento: 'nessuno',
-      copricapo: 'nessuno',
-      oggettoStudio: 'nessuno',
-      visoAccessorio: 'cerotto',
-      espressione: 'sorridente'
-    });
-    setVestiSbloccate([]);
-    setAccessoriSbloccati([]);
-    setStoricoBuoni([]);
-    setGiochiStato(creaStatoGiochiVuoto(ottieniDataOggiISO()));
-    setSerieSettimane(1);
-    setUltimaSettimanaAttiva(null);
-    setSerieCicliDonazione(0);
-    setTourCompletato(false);
+    const aggiornati = { ...accountsRef.current };
+    if (emailUtenteAttivo) {
+      delete aggiornati[emailUtenteAttivo];
+    }
+    const primaRimasta = Object.keys(aggiornati)[0] || '';
+    const nextMeta = {
+      lastEmail: authMetaRef.current.lastEmail === emailUtenteAttivo ? primaRimasta : authMetaRef.current.lastEmail,
+      rememberEmail: authMetaRef.current.rememberEmail === emailUtenteAttivo ? '' : authMetaRef.current.rememberEmail
+    };
+    accountsRef.current = aggiornati;
+    setAccounts(aggiornati);
+    authMetaRef.current = nextMeta;
+    setAuthMeta(nextMeta);
+    salvaAccountsSalvati(aggiornati, nextMeta);
+
+    const dataOggiISO = ottieniDataOggiISO();
+    caricaStatoInApp(creaStatoUtenteIniziale(dataOggiISO), dataOggiISO);
+    setEmailUtenteAttivo('');
+    setSessioneAttiva(false);
+    sessioneAttivaRef.current = false;
     setTourAttivo(false);
-    setModalitaSviluppatore(false);
     setModaleImpostazioniAperta(false);
-    mostraNotifica('Account Eliminato ↺', 'Tutti i dati locali sul dispositivo sono stati rimossi.', 0);
+    setModaleAvatarAperta(false);
+    setModaleSerieAperta(false);
+    mostraNotifica('Account Eliminato ↺', 'I dati di questo account sul dispositivo sono stati rimossi.', 0);
   };
 
   const stileFuoco = ottieniStileFuoco(serieSettimane);
@@ -7239,28 +8059,21 @@ function App() {
     <div className="min-h-[100dvh] bg-[#FDFBF7] sm:bg-stone-900 sm:py-5 flex items-center justify-center font-sans antialiased text-stone-900 select-none">
       <div className="w-full sm:max-w-[430px] bg-[#FDFBF7] flex flex-col relative sm:shadow-2xl sm:rounded-[2.8rem] sm:border-[9px] sm:border-stone-800 h-[100dvh] sm:h-[840px] sm:max-h-[92vh] overflow-hidden">
 
-        {/* SCHERMATA INIZIALE DI REGISTRAZIONE */}
-        {!registrato ? (
+        {/* SCHERMATA INIZIALE DI ACCESSO O REGISTRAZIONE */}
+        {!sessioneAttiva ? (
           <SchermataRegistrazione
-            profilo={profilo}
-            setProfilo={setProfilo}
             avatar={avatar}
             setModaleAvatarAperta={setModaleAvatarAperta}
             emailJsConfig={emailJsConfig}
+            accounts={accounts}
             mostraNotifica={mostraNotifica}
-            onCompletaRegistrazione={() => {
-              setRegistrato(true);
-              setSchedaAttiva('home');
-              if (!tourCompletato) {
-                setStepTour(0);
-                setTourAttivo(true);
-                setTourCompletato(true);
-              }
-            }}
+            onAccediUtente={onAccediUtente}
+            onIniziaNuovaRegistrazione={onIniziaNuovaRegistrazione}
+            onCompletaRegistrazione={onCompletaRegistrazione}
           />
         ) : (
           <>
-            {/* 1. HEADER MOBILE-FIRST CON LOGO, COSTANZA SETTIMANALE E PUNTI */}
+            {/* 1. HEADER MOBILE-FIRST CON LOGO, COSTANZA SETTIMANALE, PUNTI E IMPOSTAZIONI */}
             <header className="bg-white/95 backdrop-blur-md border-b border-stone-200/70 px-3.5 sm:px-4 py-2.5 safe-top shrink-0 z-30 flex items-center justify-between gap-2">
               <div className="flex items-center space-x-2 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-[#F7F5EE] border border-stone-200/90 shadow-sm overflow-hidden shrink-0">
@@ -7298,11 +8111,20 @@ function App() {
                 >
                   ★ {gocceConoscenza.toLocaleString()} pt
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setModaleImpostazioniAperta(true)}
+                  title="Impostazioni e Account"
+                  aria-label="Impostazioni"
+                  className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200/80 flex items-center justify-center text-xs transition"
+                >
+                  ⚙️
+                </button>
               </div>
             </header>
 
             {/* 2. CONTENUTO PRINCIPALE SCROLLABILE */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 sm:px-4 pt-3 pb-20 space-y-4">
+            <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 sm:px-4 pt-3 pb-20 space-y-4">
               {schedaAttiva === 'home' && (
                 <SchermataHome
                   profilo={profilo}
@@ -7312,6 +8134,7 @@ function App() {
                   passo2Completato={passo2Completato}
                   passo3Completato={passo3Completato}
                   visitaVerificataAvis={visitaVerificataAvis}
+                  tutorSceltoId={tutorSceltoId}
                   isTutorAttivo={isTutorAttivo}
                   setSchedaAttiva={setSchedaAttiva}
                   apriDiventaTutor={apriDiventaTutor}
@@ -7408,6 +8231,7 @@ function App() {
                   setStoricoBuoni={setStoricoBuoni}
                   giochiStato={giochiStato}
                   setGiochiStato={setGiochiStato}
+                  oggiISO={oggiISO}
                   modalitaSviluppatore={modalitaSviluppatore}
                   avatar={avatar}
                   profilo={profilo}
@@ -7463,7 +8287,7 @@ function App() {
         )}
 
         {/* GUIDA INTERATTIVA TOUR + MINI-SACCA GUIDA NELL'ANGOLO */}
-        {registrato && !modaleAvatarAperta && !modaleSerieAperta && !modaleImpostazioniAperta && (
+        {sessioneAttiva && !modaleAvatarAperta && !modaleSerieAperta && !modaleImpostazioniAperta && (
           <GuidaSaccaInterattiva
             profilo={profilo}
             schedaAttiva={schedaAttiva}
@@ -7505,13 +8329,14 @@ function App() {
           />
         )}
 
-        {/* MODALE IMPOSTAZIONI (ELIMINA ACCOUNT + OPZIONE SVILUPPATORE) */}
+        {/* MODALE IMPOSTAZIONI (ESCI + ELIMINA ACCOUNT + OPZIONE SVILUPPATORE) */}
         {modaleImpostazioniAperta && (
           <ModaleImpostazioni
             modalitaSviluppatore={modalitaSviluppatore}
             setModalitaSviluppatore={setModalitaSviluppatore}
             emailJsConfig={emailJsConfig}
             setEmailJsConfig={setEmailJsConfig}
+            onLogoutUtente={onLogoutUtente}
             onResetTuttiDati={onResetTuttiDati}
             onClose={() => setModaleImpostazioniAperta(false)}
           />
